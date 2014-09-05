@@ -7,11 +7,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using SafeBox.Burrow.Serialization;
 
-namespace SafeBox.Burrow.Folder
+namespace SafeBox.Burrow.Backend.Folder
 {
-    public class ObjectStore : Abstract.ObjectStore
+    public class ObjectStore : Backend.ObjectStore
     {
-        public static Abstract.ObjectStore ForUrl(string url)
+        public static ObjectStore ForUrl(string url)
         {
             var folder = Static.ToAbsolutePath(Static.UrlToWindowsFolder(url));
             if (folder == null) return null;
@@ -21,7 +21,7 @@ namespace SafeBox.Burrow.Folder
         public readonly string Folder;
 
         public ObjectStore(string url, string folder)
-            : base(url)
+            : base(url, 10)
         {
             this.Folder = folder;
         }
@@ -48,7 +48,7 @@ namespace SafeBox.Burrow.Folder
         {
             var hashHex = hash.Hex();
             var file = Folder + "\\" + hashHex.Substring(0, 2) + "\\" + hashHex.Substring(2);
-            handler(BurrowObject.From(Burrow.Static.ReadFile(file, null)));
+            handler(BurrowObject.From(Burrow.Static.FileBytes(file, null)));
         }
 
         public override void PutObject(BurrowObject obj, UnlockedPrivateIdentity identity, PutObjectResult handler)
@@ -66,9 +66,9 @@ namespace SafeBox.Burrow.Folder
             if (File.Exists(file)) { handler(hash); return; }
 
             // Write the file, and move it to the right place
-            if (!Directory.Exists(folder)) Burrow.Static.DirectoryCreate(folder);
+            if (!Directory.Exists(folder)) Burrow.Static.DirectoryCreate(folder, LogLevel.Warning);
             var temporaryFile = folder + "\\." + Burrow.Static.RandomHex(16);
-            if (Burrow.Static.WriteFile(temporaryFile, obj.Bytes) && Burrow.Static.FileMove(temporaryFile, file) && File.Exists(file)) { handler(hash); return; }
+            if (Burrow.Static.WriteFile(temporaryFile, obj.Bytes) && Burrow.Static.FileMove(temporaryFile, file, LogLevel.Warning) && File.Exists(file)) { handler(hash); return; }
             handler(null);
         }
     }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SafeBox.Burrow.Abstract;
+using SafeBox.Burrow.Backend;
 using SafeBox.Burrow.Serialization;
 
 namespace SafeBox.Burrow.Operations
@@ -100,9 +100,9 @@ namespace SafeBox.Burrow.Operations
     internal class GetPublicIdentityFromAccount
     {
         internal readonly GetPublicIdentity GetPublicIdentity;
-        internal readonly Abstract.Account Account;
+        internal readonly Account Account;
 
-        public GetPublicIdentityFromAccount(GetPublicIdentity getPublicIdentity, Abstract.Account account)
+        public GetPublicIdentityFromAccount(GetPublicIdentity getPublicIdentity, Account account)
         {
             this.GetPublicIdentity = getPublicIdentity;
             this.Account = account;
@@ -173,12 +173,12 @@ namespace SafeBox.Burrow.Operations
 
     public class AccountIdentity
     {
-        public readonly Abstract.Account Account;
+        public readonly Account Account;
         public readonly Dictionary PublicInformation;
         public readonly Hash Hash;
         public readonly DateTime RegisteredDate;
 
-        public AccountIdentity(Abstract.Account account, Hash hash, Dictionary publicInformation, DateTime registeredDate)
+        public AccountIdentity(Account account, Hash hash, Dictionary publicInformation, DateTime registeredDate)
         {
             this.Account = account;
             this.Hash = hash;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SafeBox.Burrow.Abstract
+namespace SafeBox.Burrow.Backend
 {
     // Methods are called from the main thread, and must not block, but call the handler (on the main thread) when done.
     // More than one method may be called at the same time.

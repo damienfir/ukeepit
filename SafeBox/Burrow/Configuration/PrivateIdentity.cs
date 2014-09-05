@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace SafeBox.Burrow
+namespace SafeBox.Burrow.Configuration
 {
+    /*
     public class UnlockedPrivateIdentity
     {
         public readonly PrivateIdentity PrivateIdentity;
@@ -16,29 +17,38 @@ namespace SafeBox.Burrow
             this.PrivateIdentity = privateIdentity;
             this.PrivateKey = privateKey;
         }
-    }
+    } */
 
     public class PrivateIdentity
     {
-        public readonly PublicIdentity PublicIdentity;
+        //public readonly long Date;
+        public readonly IniFile Configuration;
+        public readonly ImmutableDictionary<string, string> PublicInformation;
+        public readonly ImmutableDictionary<string, string> PrivateInformation;
+        public readonly PublicKey PublicKey;
         public readonly ArraySegment<byte> PublicKeyBytes;
-        public readonly Configuration.Dictionary PrivateInformation;
+        public readonly ImmutableStack<PublicKey> PublicKeys;
+        public readonly PrivateKey PrivateKey;  // may be null (if not available)
 
-        public PrivateIdentity(PublicIdentity publicIdentity, ArraySegment<byte> publicKeyBytes, Configuration.Dictionary privateInformation)
+        public PrivateIdentity(IniFile configuration, PublicKey publicKey, ArraySegment<byte> publicKeyBytes, PrivateKey PrivateKey)
         {
-            this.PublicIdentity = publicIdentity;
+            this.Configuration = configuration;
+            this.PublicInformation = configuration.SectionAsImmutableDictionary("public");
+            this.PrivateInformation = configuration.SectionAsImmutableDictionary("private");
+            this.PublicKey = publicKey;
             this.PublicKeyBytes = publicKeyBytes;
-            this.PrivateInformation = privateInformation;
         }
 
+        /*
         // You need to reload the burrow configuration after unlocking a key to get a new snapshot with the unlocked key.
         public UnlockedPrivateIdentity Unlock(byte[] aesKey)
         {
-            var encryptedKeyBytes = PrivateInformation.Get("aes encrypted rsa key", null as byte[]);
+            var privateKeyInfo = Configuration.Section("private key");
+            var encryptedKeyBytes = Configuration.Get("aes encrypted rsa key", null as byte[]);
             var aesIv = PrivateInformation.Get("aes iv", null as byte[]);
             var aesEncryptedByteSegment = new AESEncryptedByteSegment(new ArraySegment<byte>(encryptedKeyBytes), new ArraySegment<byte>(aesKey), new ArraySegment<byte>(aesIv));
             var plainKeyByteSegment = aesEncryptedByteSegment.Decrypt();
-            var privateKey = PrivateKey.From(Configuration.Dictionary.From(plainKeyByteSegment));
+            var privateKey = PrivateKey.From(Configuration.IniFileSection.From(plainKeyByteSegment));
             if (privateKey==null) return null;
             return new UnlockedPrivateIdentity(this, privateKey);
         }
@@ -47,7 +57,7 @@ namespace SafeBox.Burrow
         {
             // Use a plain RSA key if available
             var plainKeyBytes = PrivateInformation.Get("plain rsa key", null as byte[]);
-            var privateKey = PrivateKey.From(Configuration.Dictionary.From(plainKeyBytes));
+            var privateKey = PrivateKey.From(Configuration.IniFileSection.From(plainKeyBytes));
             if (privateKey != null) return new UnlockedPrivateIdentity(this, privateKey);
 
             // Try using this dictionary itself as a private key
@@ -55,15 +65,15 @@ namespace SafeBox.Burrow
             if (privateKey != null) return new UnlockedPrivateIdentity(this, privateKey);
 
             return null;
-        }
+        } */
 
         internal string CommonName()
         {
-            var name = PrivateInformation.Get("name", "");
+            var name = PrivateInformation.Get("name");
             if (name != "") return name;
-            name = PublicIdentity.PublicInformation.Get("fn", "");
+            name = PublicInformation.Get("name");
             if (name != "") return name;
-            name = (PublicIdentity.PublicInformation.Get("n first", "") + " " + PublicIdentity.PublicInformation.Get("n last", "")).Trim();
+            name = (PublicInformation.Get("first name") + " " + PublicInformation.Get("last name")).Trim();
             if (name != "") return name;
             return "You";
         }

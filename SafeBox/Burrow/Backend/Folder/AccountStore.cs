@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading;
 using System.IO;
 
-namespace SafeBox.Burrow.Folder
+namespace SafeBox.Burrow.Backend.Folder
 {
-    public class AccountStore: Abstract.AccountStore
+    public class AccountStore : Backend.AccountStore
     {
-        public static Abstract.AccountStore ForUrlAsync(string url)
+        public static AccountStore ForUrl(string url)
         {
             var folder = Static.ToAbsolutePath(Static.UrlToWindowsFolder(url));
             if (folder == null) return null;
@@ -44,11 +44,11 @@ namespace SafeBox.Burrow.Folder
             Burrow.Static.SynchronizationContext.Post(new SendOrPostCallback(obj => handler(accountList)), null);
         }
 
-        public override Abstract.Account Account(Hash identityHash) { return new Account(this, identityHash); }
+        public override Backend.Account Account(Hash identityHash) { return new Account(this, identityHash); }
 
         //public string AccountFolder(FolderAccount account) { return BaseFolder + "\\" + currentVersion + "\\" + account.IdentityHash.Hex(); }
         //public string RootFolder(FolderRoot root) { return AccountFolder(root.FolderAccount) + "\\" + root.Name; }
         public override void Accounts(Dictionary<string, string> query, AccountsResult handler) { handler(new List<Abstract.Account>()); }
-        public override Abstract.Account Account(Hash identityHash) { return null; }
+        public override Backend.Account Account(Hash identityHash) { return null; }
     }
 }

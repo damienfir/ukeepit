@@ -11,7 +11,9 @@ namespace SafeBox.Burrow.Serialization
         private ByteChain byteChain = new ByteChain();
         private BigEndian bigEndian = new BigEndian();
 
-        public DictionaryConstructor() { }
+        public DictionaryConstructor() {
+            byteChain.Append(Dictionary.MimeType);
+        }
 
         public ByteChain Serialize(HashCollector hashCollector)
         {
@@ -27,6 +29,12 @@ namespace SafeBox.Burrow.Serialization
             var byteChainToReturn = byteChain;
             byteChain = null;
             return byteChainToReturn;
+        }
+
+        public BurrowObject ToBurrowObject()
+        {
+            var hashCollector = new HashCollector();
+            return BurrowObject.For(hashCollector, Serialize(hashCollector));
         }
 
         private void Append(string text) { Append(System.Text.Encoding.UTF8.GetBytes(text)); }

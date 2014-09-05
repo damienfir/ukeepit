@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
+using SafeBox.Burrow.Serialization;
 
 namespace SafeBox.Burrow
 {
@@ -22,15 +23,12 @@ namespace SafeBox.Burrow
             return Hash.For(publicKeyObjectBytes);
         }
 
-        public static PublicKey From(byte[] bytes) { return From(IdentityHashForPublicKeyBytes(bytes), Configuration.Dictionary.From(bytes)); }
-        public static PublicKey From(Hash hash, ArraySegment<byte> bytes) { return From(hash, Configuration.Dictionary.From(bytes)); }
-
-        public static PublicKey From(Hash hash, Configuration.Dictionary dictionary)
+        public static PublicKey From(Hash hash, Dictionary dictionary)
         {
             if (dictionary == null) return null;
             var key = new RSAParameters();
-            key.Modulus = dictionary.Get("modulus", null as byte[]);
-            key.Exponent = dictionary.Get("exponent", null as byte[]);
+            key.Modulus = Static.ToByteArray(dictionary.Get("modulus"));
+            key.Exponent = Static.ToByteArray(dictionary.Get("exponent"));
             if (key.Modulus == null || key.Exponent == null) return null;
 
             var rsa = new RSACryptoServiceProvider();
@@ -50,11 +48,11 @@ namespace SafeBox.Burrow
         }
 
         public byte[] Encrypt(ArraySegment<byte> bytes) { 
-            return RSACryptoServiceProvider.Encrypt(Static.ByteArray(bytes), true); 
+            return RSACryptoServiceProvider.Encrypt(Static.ToByteArray(bytes), true); 
         }
 
         public bool VerifySignature(Hash hash, ArraySegment<byte> signatureBytes) { 
-            return RSACryptoServiceProvider.VerifyHash(hash.Bytes(), "SHA256", Static.ByteArray(signatureBytes)); 
+            return RSACryptoServiceProvider.VerifyHash(hash.Bytes(), "SHA256", Static.ToByteArray(signatureBytes)); 
         }
     }
 }

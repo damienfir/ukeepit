@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using SafeBox.Burrow.Serialization.Text;
+using SafeBox.Burrow.Serialization;
 
 namespace SafeBox.Burrow
 {
@@ -22,7 +24,7 @@ namespace SafeBox.Burrow
         public string Hex()
         {
             if (hexHash != null) return hexHash;
-            hexHash = Static.BytesToHexString(binaryHash);
+            hexHash = binaryHash.ToHexString();
             return hexHash;
         }
 
@@ -38,7 +40,7 @@ namespace SafeBox.Burrow
         public byte[] Bytes()
         {
             if (binaryHash != null) return binaryHash;
-            binaryHash = Static.HexStringToBytes(hexHash);
+            binaryHash = hexHash.ToByteArray();
             return binaryHash;
         }
 

@@ -10,13 +10,24 @@ namespace SafeBox.Burrow.Serialization
     {
         // *** Static ***
 
+        internal static byte[] MimeType = { 29, 97, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 47, 98, 117, 114, 114, 111, 119, 45, 100, 105, 99, 116, 105, 111, 110, 97, 114, 121 };
+
         public struct Pair
         {
             public ArraySegment<byte> Key;
             public ArraySegment<byte> Value;
         }
 
-        public static Dictionary From(BurrowObject obj) { return From(obj, obj.Data); }
+        public static Dictionary From(BurrowObject obj) {
+            if (obj == null) return null;
+
+            // Verify the mime type
+            if (obj.Data.Count < 30) return null;
+            for (var i = 0; i < 30; i++) if (obj.Data.Array[i + obj.Data.Offset] != MimeType[i]) return null;
+
+            // Read the dictionary
+            return From(obj, new ArraySegment<byte>(obj.Data.Array, obj.Data.Offset + 30, obj.Data.Count - 30));
+        }
 
         public static Dictionary From(BurrowObject obj, ArraySegment<byte> bytes)
         {
@@ -27,9 +38,9 @@ namespace SafeBox.Burrow.Serialization
             while (pos < bytes.Offset + bytes.Count)
             {
                 // Key and value length
-                var keyLength = BitConverter.ToInt16(bytes.Array, pos);
+                var keyLength = BigEndian.Int16(bytes.Array, pos);
                 if (pos + 2 + keyLength + 2 > bytes.Offset + bytes.Count) return new Dictionary(obj, pairs);
-                var valueLength = BitConverter.ToInt16(bytes.Array, pos + 2 + keyLength);
+                var valueLength = BigEndian.Int16(bytes.Array, pos + 2 + keyLength);
                 if (pos + 2 + keyLength + 2 + valueLength > bytes.Offset + bytes.Count) return new Dictionary(obj, pairs);
 
                 // Key and value

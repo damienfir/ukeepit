@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SafeBox.Burrow.Abstract
+namespace SafeBox.Burrow.Backend
 {
     public abstract class Account
     {

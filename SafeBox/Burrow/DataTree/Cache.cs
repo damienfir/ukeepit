@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SafeBox.Burrow.Serialization;
-using SafeBox.Burrow.Abstract;
+using SafeBox.Burrow.Backend;
 
 namespace SafeBox.Burrow.DataTree
 {
@@ -37,7 +37,7 @@ namespace SafeBox.Burrow.DataTree
 
         public void GetObjectDone(BurrowObject obj, ObjectStore source)
         {
-            var decryptedData = new AESEncryptedByteSegment(obj.Data, hashWithAesParameters.Key, hashWithAesParameters.Iv).Decrypt();
+            var decryptedData = Aes.Decrypt(obj.Data, hashWithAesParameters.Key, hashWithAesParameters.Iv);
             var partialTree = PartialTree.From(obj, decryptedData);
             cache.partialTrees[hashWithAesParameters.Hash.Hex()] = partialTree;
         }
