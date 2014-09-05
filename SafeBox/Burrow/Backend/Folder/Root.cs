@@ -5,10 +5,11 @@ using System.Text;
 using System.IO;
 using System.Threading;
 using System.Text.RegularExpressions;
+using SafeBox.Burrow.Configuration;
 
-namespace SafeBox.Burrow.Folder
+namespace SafeBox.Burrow.Backend.Folder
 {
-    public class Root : Abstract.Root
+    public class Root : Backend.Root
     {
         public readonly string Folder;
 
@@ -27,25 +28,24 @@ namespace SafeBox.Burrow.Folder
             var list = new List<ObjectUrl>();
             var identityHashHex = Account.IdentityHash.Hex();
 
-            foreach (var file in Burrow.Static.DirectoryEnumerateFilesSilent(Folder))
+            foreach (var file in Burrow.Static.DirectoryEnumerateFiles(Folder))
             {
                 var name = Path.GetFileName(file);
                 if (name.Length < 64) continue;
                 var hash = Hash.From(name.Substring(0, 64));
                 if (hash == null) continue;
-                var url = Burrow.Static.ReadFileSilent(file, null as string);
-                if (url == null) continue;
+                var url = Burrow.Static.FileUtf8Text(file, null as string);
                 list.Add(new ObjectUrl(url, hash));
             }
 
             Burrow.Static.SynchronizationContext.Post(new SendOrPostCallback(obj => handler(list)), null);
         }
 
-        public override void Post(IEnumerable<ObjectUrl> add, IEnumerable<Hash> remove, UnlockedPrivateIdentity identity, PostResult handler) {
+        public override void Post(IEnumerable<ObjectUrl> add, IEnumerable<Hash> remove, PrivateIdentity identity, PostResult handler) {
             ThreadPool.QueueUserWorkItem(new WaitCallback(obj => PostAsync( add, remove, identity, handler)));
         }
 
-        void PostAsync(IEnumerable<ObjectUrl> add, IEnumerable<Hash> remove, UnlockedPrivateIdentity identity, PostResult handler)
+        void PostAsync(IEnumerable<ObjectUrl> add, IEnumerable<Hash> remove, PrivateIdentity identity, PostResult handler)
         {
             // List of files to remove
             var hexHashesToRemove = new SortedSet<string>();
@@ -53,7 +53,7 @@ namespace SafeBox.Burrow.Folder
 
             // Create the folder to add hashes if necessary
             var identityHashHex = Account.IdentityHash.Hex();
-            Burrow.Static.DirectoryCreate(Folder);
+            Burrow.Static.DirectoryCreate(Folder, LogLevel.Warning);
             // TODO: set access rights 
             //mkdir $o->{account}->{folder}, 0755;
             //mkdir $o->{folder},	$o->{name} eq 'identity' ? 0755 :
@@ -67,22 +67,22 @@ namespace SafeBox.Burrow.Folder
                 var fileContent = url == null ? new ArraySegment<byte>(new byte[0]) : new ArraySegment<byte>(Encoding.UTF8.GetBytes(url));
                 var temporaryFile = Folder + "\\." + Burrow.Static.RandomHex(16);
                 if (!Burrow.Static.WriteFile(temporaryFile, fileContent)) { Burrow.Static.SynchronizationContext.Post(new SendOrPostCallback(obj => handler(false)), null); return; }
-                var suffix = url == null ? "" : "-" + Burrow.Static.BytesToHexString(sha256.ComputeHash(fileContent.Array), 0, 16);
+                var suffix = url == null ? "" : "-" + Burrow.Serialization.Text.ToHexString(sha256.ComputeHash(fileContent.Array), 0, 16);
                 var hashHex = objectUrl.Hash.Hex();
                 var file = Folder + '\\' + hashHex + suffix;
-                Burrow.Static.FileMoveSilent(temporaryFile, file);
-                Burrow.Static.FileDeleteSilent(temporaryFile);
+                Burrow.Static.FileMove(temporaryFile, file, LogLevel.Warning);
+                Burrow.Static.FileDelete(temporaryFile, LogLevel.Warning);
                 if (!File.Exists(file)) { Burrow.Static.SynchronizationContext.Post(new SendOrPostCallback(obj => handler(false)), null); return; }
                 hexHashesToRemove.Remove(hashHex);
             }
 
             // Remove (and ignore all errors)
             if (hexHashesToRemove.Count > 0)
-                foreach (var file in Burrow.Static.DirectoryEnumerateFilesSilent(Folder))
+                foreach (var file in Burrow.Static.DirectoryEnumerateFiles(Folder))
                 {
                     var name = Path.GetFileName(file);
                     if (name.Length < 64) continue;
-                    if (hexHashesToRemove.Contains(name.Substring(0, 64))) Burrow.Static.FileDelete(file);
+                    if (hexHashesToRemove.Contains(name.Substring(0, 64))) Burrow.Static.FileDelete(file, LogLevel.Warning);
                 }
 
             Burrow.Static.SynchronizationContext.Post(new SendOrPostCallback(obj => handler(true)), null);

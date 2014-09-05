@@ -5,7 +5,8 @@ using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
 using SafeBox.Burrow.Serialization;
-using SafeBox.Burrow.Abstract;
+using SafeBox.Burrow.Backend;
+using SafeBox.Burrow.Configuration;
 
 namespace SafeBox.Burrow
 {
@@ -17,46 +18,11 @@ namespace SafeBox.Burrow
         public static System.Threading.SynchronizationContext SynchronizationContext;
         public static Random Random = new Random();
 
-        // Conversion from byte array to hex string, and vice versa
-        public static string HexChars = "0123456789abcdef";
-        public static char ToHexChar(int value) { return HexChars[value & 0xf]; }
-
-        public static int FromHexChar(char c)
-        {
-            var value = (int)c;
-            if (value >= 48 && value <= 57) return value - 48;
-            if (value >= 65 && value <= 70) return value - 65 + 10;
-            if (value >= 97 && value <= 102) return value - 97 + 10;
-            return 0;
-        }
-
-        public static string BytesToHexString(byte[] bytes) { return BytesToHexString(bytes, 0, bytes.Length); }
-
-        public static string BytesToHexString(byte[] bytes, int offset, int count)
-        {
-            char[] hex = new char[count * 2];
-            for (var i = 0; i < count; i++)
-            {
-                hex[i * 2] = ToHexChar(bytes[offset + i] >> 4);
-                hex[i * 2 + 1] = ToHexChar(bytes[offset + i]);
-            }
-            return new string(hex);
-        }
-
-        public static byte[] HexStringToBytes(string hex)
-        {
-            byte[] bytes = new byte[hex.Length >> 1];
-            for (var i = 0; i < bytes.Length; i++)
-            {
-                bytes[i] = (byte)((FromHexChar(hex[i * 2]) << 4) | FromHexChar(hex[i * 2 + 1]));
-            }
-            return bytes;
-        }
-
         public static string RandomHex(int length)
         {
+            var hexChars = "0123456789abcdef";
             var chars = new char[length];
-            for (var i = 0; i < length; i++) chars[i] = ToHexChar(Random.Next());
+            for (var i = 0; i < length; i++) chars[i] = hexChars[Random.Next()];
             return new string(chars);
         }
 
@@ -77,15 +43,32 @@ namespace SafeBox.Burrow
         } */
 
         // Object store creation
-        public static Abstract.ObjectStore ObjectStoreForUrl(string url, string logName)
+        public static Backend.ObjectStore ObjectStoreForUrl(string url, string logName)
         {
             if (url == null) return null;
 
             // Show the URL to all available backends
-            var store = Folder.ObjectStore.ForUrl(url);
-            if (store != null) return store;
+            var httpStore = Backend.HTTP.ObjectStore.ForUrl(url);
+            if (httpStore != null) return httpStore;
+            var folderStore = Backend.Folder.ObjectStore.ForUrl(url);
+            if (folderStore != null) return folderStore;
 
-            Static.Log.Error("Store '" + logName + "': Invalid or unsupported URL '" + url + "'.");
+            Static.Log.Error("Object store '" + logName + "': Invalid or unsupported URL '" + url + "'.");
+            return null;
+        }
+
+        // Account store creation
+        public static Backend.AccountStore AccountStoreForUrl(string url, string logName)
+        {
+            if (url == null) return null;
+
+            // Show the URL to all available backends
+            var httpStore = Backend.HTTP.AccountStore.ForUrl(url);
+            if (httpStore != null) return httpStore;
+            var folderStore = Backend.Folder.AccountStore.ForUrl(url);
+            if (folderStore != null) return folderStore;
+
+            Static.Log.Error("Account store '" + logName + "': Invalid or unsupported URL '" + url + "'.");
             return null;
         }
 
@@ -110,27 +93,35 @@ namespace SafeBox.Burrow
             return (long)value;
         }
 
-        // File and directory operations
-        public static byte[] ReadFile(string file, byte[] defaultBytes)
+        // *** File operations ***
+
+        public static byte[] FileBytes(string file, byte[] defaultBytes, int logLevel = LogLevel.None)
         {
             try { return File.ReadAllBytes(file); }
             catch (Exception ex)
             {
-                Static.Log.Error("Failed to read file '" + file + "'. " + ex.ToString());
+                Static.Log.Message(logLevel, "Failed to read file '" + file + "'. " + ex.ToString());
                 return defaultBytes;
             }
         }
 
-        public static byte[] ReadFileSilent(string file, byte[] defaultBytes)
-        {
-            try { return File.ReadAllBytes(file); }
-            catch (Exception) { return defaultBytes; }
-        }
-
-        public static string ReadFileSilent(string file, string defaultText)
+        public static string FileUtf8Text(string file, string defaultText, int logLevel = LogLevel.None)
         {
             try { return System.IO.File.ReadAllText(file, Encoding.UTF8); }
-            catch (Exception) { return defaultText; }
+            catch (Exception ex) {
+                Static.Log.Message(logLevel, "Failed to read file '" + file + "'. " + ex.ToString());
+                return defaultText; 
+            }
+        }
+
+        public static string[] FileUtf8Lines(string file, string[] defaultLines, int logLevel = LogLevel.None)
+        {
+            try
+            {
+                var content = System.IO.File.ReadAllText(file, Encoding.UTF8);
+                return Regex.Split(content, "[\n\r]+");
+            }
+            catch (Exception) { return new string[0]; }
         }
 
         public static bool WriteFile(string file, ArraySegment<byte> bytes) { return WriteFile(file, bytes.Array, bytes.Offset, bytes.Count); }
@@ -155,7 +146,7 @@ namespace SafeBox.Burrow
             }
         }
 
-        public static bool FileMove(string source, string destination)
+        public static bool FileMove(string source, string destination, int logLevel = LogLevel.None)
         {
             try
             {
@@ -164,22 +155,12 @@ namespace SafeBox.Burrow
             }
             catch (Exception ex)
             {
-                Static.Log.Error("Failed to move file '" + source + "' to '" + destination + "'. " + ex.ToString());
+                Static.Log.Message(logLevel, "Failed to move file '" + source + "' to '" + destination + "'. " + ex.ToString());
                 return false;
             }
         }
 
-        public static bool FileMoveSilent(string source, string destination)
-        {
-            try
-            {
-                File.Move(source, destination);
-                return true;
-            }
-            catch (Exception) { return false; }
-        }
-
-        public static bool FileDelete(string file)
+        public static bool FileDelete(string file, int logLevel = LogLevel.None)
         {
             try
             {
@@ -188,22 +169,14 @@ namespace SafeBox.Burrow
             }
             catch (Exception ex)
             {
-                Static.Log.Error("Failed to delete file '" + file + "'." + ex.ToString());
+                Static.Log.Message(logLevel, "Failed to delete file '" + file + "'." + ex.ToString());
                 return false;
             }
         }
 
-        public static bool FileDeleteSilent(string file)
-        {
-            try
-            {
-                File.Delete(file);
-                return true;
-            }
-            catch (Exception) { return false; }
-        }
+        // *** Directory operations ***
 
-        public static bool DirectoryMove(string source, string destination)
+        public static bool DirectoryMove(string source, string destination, int logLevel = LogLevel.None)
         {
             try
             {
@@ -212,12 +185,12 @@ namespace SafeBox.Burrow
             }
             catch (Exception ex)
             {
-                Static.Log.Error("Failed to move '" + source + "' to '" + destination + "'. " + ex.ToString());
+                Static.Log.Message(logLevel, "Failed to move '" + source + "' to '" + destination + "'. " + ex.ToString());
                 return false;
             }
         }
 
-        public static bool DirectoryDelete(string directory)
+        public static bool DirectoryDelete(string directory, int logLevel = LogLevel.None)
         {
             try
             {
@@ -226,18 +199,12 @@ namespace SafeBox.Burrow
             }
             catch (Exception ex)
             {
-                Static.Log.Error("Failed to remove '" + directory + "'. " + ex.ToString());
+                Static.Log.Message(logLevel, "Failed to remove '" + directory + "'. " + ex.ToString());
                 return false;
             }
         }
 
-        public static void DirectoryCreateSilent(string folder)
-        {
-            try { Directory.CreateDirectory(folder); }
-            catch (Exception) { }
-        }
-
-        public static bool DirectoryCreate(string folder)
+        public static bool DirectoryCreate(string folder, int logLevel = LogLevel.None)
         {
             try
             {
@@ -246,45 +213,34 @@ namespace SafeBox.Burrow
             }
             catch (Exception ex)
             {
-                Static.Log.Error("Failed to create folder '" + folder + "'. " + ex.ToString());
+                Static.Log.Message(logLevel, "Failed to create folder '" + folder + "'. " + ex.ToString());
                 return false;
             }
         }
 
-        public static IEnumerable<string> DirectoryEnumerateFilesSilent(string folder)
-        {
-            try { return Directory.EnumerateFiles(folder); }
-            catch (Exception) { return new string[0]; }
-        }
-
-        public static IEnumerable<string> DirectoryEnumerateFiles(string folder)
+        public static IEnumerable<string> DirectoryEnumerateFiles(string folder, int logLevel = LogLevel.None)
         {
             try { return Directory.EnumerateFiles(folder); }
             catch (Exception ex)
             {
-                Static.Log.Error("Failed to enumerate files in folder '" + folder + "'. " + ex.ToString());
+                Static.Log.Message(logLevel, "Failed to enumerate files in folder '" + folder + "'. " + ex.ToString());
                 return new string[0];
             }
         }
 
-        public static IEnumerable<string> DirectoryEnumerateDirectories(string folder)
+        public static IEnumerable<string> DirectoryEnumerateDirectories(string folder, int logLevel = LogLevel.None)
         {
             try { return Directory.EnumerateDirectories(folder); }
             catch (Exception ex)
             {
-                Static.Log.Error("Failed to enumerate directories in folder '" + folder + "'. " + ex.ToString());
+                Static.Log.Message(logLevel, "Failed to enumerate directories in folder '" + folder + "'. " + ex.ToString());
                 return new string[0];
             }
         }
 
-        public static IEnumerable<string> DirectoryEnumerateDirectoriesSilent(string folder)
-        {
-            try { return Directory.EnumerateDirectories(folder); }
-            catch (Exception) { return new string[0]; }
-        }
+        // *** Envelopes ***
 
-
-        public static BurrowObject CreateEnvelope(HashWithAesParameters hashWithAesParameters, UnlockedPrivateIdentity sender, IEnumerable<PublicIdentity> receiver)
+        public static BurrowObject CreateEnvelope(HashWithAesParameters hashWithAesParameters, PrivateIdentity sender, IEnumerable<PublicIdentity> receiver)
         {
             // Create serialization structures
             var hashCollector = new HashCollector();
@@ -294,13 +250,13 @@ namespace SafeBox.Burrow
             envelope.Add("content", hashWithAesParameters.Hash);
 
             // Set sender and signature
-            var senderHash = sender.PrivateIdentity.PublicIdentity.PublicKey.Hash;
+            var senderHash = sender.PublicKey.Hash;
             envelope.Add("sender", senderHash);
             envelope.Add("signature", sender.PrivateKey.Sign(hashWithAesParameters.Hash));
             
             // Add encrypted AES keys
             var encryptedAesKeysDictionary = new DictionaryConstructor();
-            encryptedAesKeysDictionary.Add(senderHash.Bytes(), sender.PrivateIdentity.PublicIdentity.PublicKey.Encrypt(hashWithAesParameters.Key));
+            encryptedAesKeysDictionary.Add(senderHash.Bytes(), sender.PublicKey.Encrypt(hashWithAesParameters.Key));
             envelope.Add("encrypted aes key", encryptedAesKeysDictionary.Serialize(hashCollector));
             envelope.Add("aes iv", hashWithAesParameters.Iv);
 
@@ -319,7 +275,7 @@ namespace SafeBox.Burrow
             return BurrowObject.For(hashCollector, envelope.Serialize(hashCollector));
         }
 
-        public static HashWithAesParameters OpenEnvelope(BurrowObject obj, UnlockedPrivateIdentity identity, IEnumerable<PublicIdentity> publicIdentities)
+        public static HashWithAesParameters OpenEnvelope(BurrowObject obj, PrivateIdentity identity, IEnumerable<PublicIdentity> publicIdentities)
         {
             var envelope = Dictionary.From(obj);
 
@@ -350,7 +306,7 @@ namespace SafeBox.Burrow
 
             // Decrypt the AES key
             var encryptedAESKeys = Dictionary.From(obj, envelope.Get("encrypted aes key"));
-            var encryptedAESKey = encryptedAESKeys.Get(identity.PrivateIdentity.PublicIdentity.PublicKey.Hash.Bytes());
+            var encryptedAESKey = encryptedAESKeys.Get(identity.PublicKey.Hash.Bytes());
             if (encryptedAESKey == null) return null;
             var aesKey = identity.PrivateKey.Decrypt(encryptedAESKey);
             if (aesKey == null) return null;
@@ -422,7 +378,7 @@ namespace SafeBox.Burrow
             catch (Exception) { return null; }
         }
 
-        public static string UtcDateToText(DateTime utcDate) { return utcDate.ToString("yyyyMMddTHHmmssZ"); }
+        /*public static string UtcDateToText(DateTime utcDate) { return utcDate.ToString("yyyyMMddTHHmmssZ"); }
 
         public static DateTime TextToUtcDate(string text, DateTime defaultUtcDate)
         {
@@ -464,7 +420,7 @@ namespace SafeBox.Burrow
             if (v < min) return -1;
             if (v > max) return -1;
             return v;
-        }
+        } */
 
         // DateTime conversion
         public static long UnixEpochTicks = new DateTime(1970, 1, 1, 0, 0, 0, 0).Ticks;
@@ -493,11 +449,18 @@ namespace SafeBox.Burrow
             return true;
         }
 
-        public static byte[] ByteArray(ArraySegment<byte> segment) {
+        public static byte[] ToByteArray(this ArraySegment<byte> segment) {
+            if (segment.Array == null) return null;
             if (segment.Offset==0 && segment.Count == segment.Array.Length) return segment.Array;
             var bytes = new byte[segment.Count];
             Array.Copy(segment.Array, segment.Offset, bytes, 0, segment.Count);
             return bytes;
         }
+
+        public static ArraySegment<byte> ToByteSegment(this byte[] byteArray) { return new ArraySegment<byte>(byteArray); }
+
+        // Empty byte sequences
+        public static byte[] EmptyByteArray = new byte[0];
+        public static ArraySegment<byte> EmptyByteSegment = new ArraySegment<byte>(EmptyByteArray, 0, 0);
     }
 }

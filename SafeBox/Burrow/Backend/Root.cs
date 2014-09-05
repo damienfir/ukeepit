@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SafeBox.Burrow.Configuration;
 
-namespace SafeBox.Burrow.Abstract
+namespace SafeBox.Burrow.Backend
 {
     public abstract class Root
     {
@@ -22,6 +23,6 @@ namespace SafeBox.Burrow.Abstract
 
         // Modifies the list of object urls. Returns false if one or more hashes could not be added, and true otherwise.
         public delegate void PostResult(bool result);
-        public abstract void Post(IEnumerable<ObjectUrl> add, IEnumerable<Hash> remove, UnlockedPrivateIdentity identity, PostResult handler);
+        public abstract void Post(IEnumerable<ObjectUrl> add, IEnumerable<Hash> remove, PrivateIdentity identity, PostResult handler);
     }
 }

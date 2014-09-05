@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SafeBox.Burrow.Abstract;
+using SafeBox.Burrow.Backend;
 using SafeBox.Burrow.Serialization;
+using SafeBox.Burrow.Configuration;
 
 namespace SafeBox.Burrow.Operations
 {
@@ -11,30 +12,32 @@ namespace SafeBox.Burrow.Operations
     {
         public delegate void Done(bool success);
         private Done handler;
-        private UnlockedPrivateIdentity identity;
-        private Abstract.Root root;
+        private PrivateIdentity identity;
+        private Backend.Root root;
 
-        public AnnounceIdentity(UnlockedPrivateIdentity identity, ObjectStore objectStore, AccountStore accountStore, DateTime registeredDate, Done handler)
+        public AnnounceIdentity(PrivateIdentity identity, ObjectStore objectStore, AccountStore accountStore, DateTime registeredDate, Done handler)
         {
             this.identity = identity;
             this.handler = handler;
 
             // Create the account (if necessary)
-            var accountId = identity.PrivateIdentity.PublicIdentity.PublicKey.Hash;
+            var accountId = identity.PublicKey.Hash;
             var account = accountStore.Account(accountId);
             if (account == null) { if (handler != null) handler(false); return; }
 
             // Prepare the public information dictionary
-            var publicInformation = identity.PrivateIdentity.PublicIdentity.PublicInformation.Clone();
-            publicInformation.Set("registered date", registeredDate);
-            publicInformation.AddHash("key", identity.PrivateIdentity.PublicIdentity.PublicKey.Hash);
+            var publicInformation = new DictionaryConstructor();
+            foreach (var pair in identity.PublicInformation) publicInformation.Add(pair.Item1, pair.Item2);
+            publicInformation.Add("registered date", registeredDate);
+            publicInformation.Add("key", identity.PublicKey.Hash);
 
             // Add the public key
-            publicKeyExpectedHash = identity.PrivateIdentity.PublicIdentity.PublicKey.Hash;
-            objectStore.PutObject(BurrowObject.For(new HashCollector(), identity.PrivateIdentity.PublicKeyBytes), identity, PublicKeyPutDone);
+            publicKeyExpectedHash = identity.PublicKey.Hash;
+            objectStore.PutObject(BurrowObject.For(new HashCollector(), identity.PublicKeyBytes), identity, PublicKeyPutDone);
 
             // Store the public information
-            var publicInformationObject = publicInformation.ToObjectConstructor().ToSerializedObject();
+            var publicInformationHashes = new HashCollector();
+            var publicInformationObject = BurrowObject.For(publicInformationHashes, publicInformation.Serialize(publicInformationHashes));
             publicInformationExpectedHash = publicInformationObject.Hash();
             objectStore.PutObject(publicInformationObject, identity, PublicInformationPutDone);
 
@@ -42,8 +45,8 @@ namespace SafeBox.Burrow.Operations
             var envelope = new DictionaryConstructor();
             envelope.Add("signature", identity.PrivateKey.Sign(publicInformationExpectedHash));
             envelope.Add("content", publicInformationExpectedHash);
-            var hashCollector = new HashCollector();
-            var envelopeObject = BurrowObject.For(hashCollector, envelope.Serialize(hashCollector));
+            var envelopeHashes = new HashCollector();
+            var envelopeObject = BurrowObject.For(envelopeHashes, envelope.Serialize(envelopeHashes));
             envelopeExpectedHash = envelopeObject.Hash();
             objectStore.PutObject(envelopeObject, identity, EnvelopePutDone);
 

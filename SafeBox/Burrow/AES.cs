@@ -7,10 +7,9 @@ using SafeBox.Burrow.Serialization;
 
 namespace SafeBox.Burrow
 {
-    public class AESEncryptedByteSegment
+    public class Aes
     {
-        // *** Static ***
-        static AesManaged aes = CreateAESManaged();
+        internal static AesManaged aes = CreateAESManaged();
 
         private static AesManaged CreateAESManaged()
         {
@@ -19,7 +18,27 @@ namespace SafeBox.Burrow
             return aes;
         }
 
-        public static AESEncryptedByteSegment Encrypt(byte[] bytes, int offset, int length, int prependBytes)
+        public static ArraySegment<byte> Encrypt(ArraySegment<byte> bytes, byte[] key, byte[] iv, int prependBytes = 0) {
+            var encryptor = aes.CreateEncryptor(key, iv);
+            var blockSize = encryptor.InputBlockSize;
+            var encryptedBytes = new byte[bytes.Count + blockSize + prependBytes];
+
+            var i = 0;
+            var w = 0;
+            while (i < bytes.Count - blockSize)
+            {
+                w += encryptor.TransformBlock(bytes.Array, bytes.Offset + i, blockSize, encryptedBytes, prependBytes + w);
+                i += blockSize;
+            }
+
+            var finalBuffer = encryptor.TransformFinalBlock(bytes.Array, bytes.Offset + i, bytes.Count - i);
+            for (int n = 0; n < finalBuffer.Length; n++) encryptedBytes[prependBytes + w + n] = finalBuffer[n];
+            return new ArraySegment<byte>(encryptedBytes, 0, prependBytes + w + finalBuffer.Length);
+        }
+
+        public static AesEncryptedByteSegment Encrypt(byte[] bytes, int prependBytes = 0) { return Encrypt(new ArraySegment<byte>(bytes), prependBytes); }
+
+        public static AesEncryptedByteSegment Encrypt(ArraySegment<byte> bytes, int prependBytes = 0)
         {
             if (bytes == null) return null;
 
@@ -28,68 +47,50 @@ namespace SafeBox.Burrow
             var iv = new byte[16];
             Static.Random.NextBytes(iv);
 
-            var encryptor = aes.CreateEncryptor(key, iv);
-            var blockSize = encryptor.InputBlockSize;
-            var encryptedBytes = new byte[length + blockSize + prependBytes];
-
-            var i = 0;
-            var w = 0;
-            while (i < length - blockSize)
-            {
-                w+=encryptor.TransformBlock(bytes, offset + i, blockSize, encryptedBytes, prependBytes + w);
-                i += blockSize;
-            }
-
-            var finalBuffer = encryptor.TransformFinalBlock(bytes, offset + i, length - i);
-            for (int n = 0; n < finalBuffer.Length; n++) encryptedBytes[prependBytes + w + n] = finalBuffer[n];
-
-            return new AESEncryptedByteSegment(new ArraySegment<byte>(encryptedBytes, 0, prependBytes + w + finalBuffer.Length), new ArraySegment<byte>(key), new ArraySegment<byte>(iv));
+            return new AesEncryptedByteSegment(Aes.Encrypt(bytes, key, iv, prependBytes), new ArraySegment<byte>(key), new ArraySegment<byte>(iv));
         }
 
-        // *** Object ***
+        public static ArraySegment<byte> Decrypt(ArraySegment<byte> bytes, ArraySegment<byte> key, ArraySegment<byte> iv) { return Decrypt(bytes, Static.ToByteArray(key), Static.ToByteArray(iv)); }
 
-        public readonly ArraySegment<byte> Bytes;
-        public readonly ArraySegment<byte> Key;
-        public readonly ArraySegment<byte> Iv;
-
-        public AESEncryptedByteSegment(ArraySegment<byte> bytes, ArraySegment<byte> aesKey, ArraySegment<byte> aesIv)
+        public static ArraySegment<byte> Decrypt(ArraySegment<byte> bytes, byte[] key, byte[] iv)
         {
-            this.Bytes = bytes;
-            this.Key = aesKey;
-            this.Iv = aesIv;
-        }
-
-        public ArraySegment<byte> Decrypt()
-        {
-            if (Key == null || Iv == null || Bytes == null) return new ArraySegment<byte>(null, 0, 0);
-
-            var keyArray = new byte[32];
-            var ivArray = new byte[16];
-            System.Array.Copy(Key.Array, Key.Offset, keyArray, 0, 32);
-            System.Array.Copy(Iv.Array, Iv.Offset, ivArray, 0, 32);
-            var decryptor = aes.CreateDecryptor(keyArray, ivArray);
+            var decryptor = aes.CreateDecryptor(key, iv);
             var blockSize = decryptor.InputBlockSize;
-            var decryptedBytes = new byte[Bytes.Count];
+            var decryptedBytes = new byte[bytes.Count];
 
             var i = 0;
             var w = 0;
-            while (i < Bytes.Count - blockSize)
+            while (i < bytes.Count - blockSize)
             {
-                w += decryptor.TransformBlock(Bytes.Array, Bytes.Offset + i, blockSize, decryptedBytes, w);
+                w += decryptor.TransformBlock(bytes.Array, bytes.Offset + i, blockSize, decryptedBytes, w);
                 i += blockSize;
             }
 
-            var finalBuffer = decryptor.TransformFinalBlock(Bytes.Array, Bytes.Offset + i, blockSize);
+            var finalBuffer = decryptor.TransformFinalBlock(bytes.Array, bytes.Offset + i, blockSize);
             for (int n = 0; n < finalBuffer.Length; n++) decryptedBytes[w + n] = finalBuffer[n];
             return new ArraySegment<byte>(decryptedBytes, 0, w + finalBuffer.Length);
         }
     }
 
-    public class AESEncryptedObject
+    public class AesEncryptedByteSegment
+    {
+        public readonly ArraySegment<byte> Bytes;
+        public readonly ArraySegment<byte> Key;
+        public readonly ArraySegment<byte> Iv;
+
+        public AesEncryptedByteSegment(ArraySegment<byte> bytes, ArraySegment<byte> aesKey, ArraySegment<byte> aesIv)
+        {
+            this.Bytes = bytes;
+            this.Key = aesKey;
+            this.Iv = aesIv;
+        }
+    }
+
+    public class AesEncryptedObject
     {
         // *** Static ***
 
-        public static AESEncryptedObject From(HashCollector hashCollector, ByteChain byteChain)
+        public static AesEncryptedObject For(HashCollector hashCollector, ByteChain byteChain)
         {
             // Prepare the data
             var dataLength = byteChain.ByteLength();
@@ -97,23 +98,25 @@ namespace SafeBox.Burrow
             byteChain.WriteToByteArray(dataBytes, 0);
 
             // Encrypt the data, while keeping enough space for the header
-            var aesEncryptedByteSegment = AESEncryptedByteSegment.Encrypt(dataBytes, 0, dataLength, hashCollector.ByteLength());
+            var aesEncryptedByteSegment = Aes.Encrypt(dataBytes, hashCollector.ByteLength());
 
             // Add the header
             hashCollector.WriteToByteArray(aesEncryptedByteSegment.Bytes.Array, aesEncryptedByteSegment.Bytes.Offset);
 
             // Create the encrypted object
-            return new AESEncryptedObject(new Serialization.BurrowObject(aesEncryptedByteSegment.Bytes), aesEncryptedByteSegment.Key, aesEncryptedByteSegment.Iv);
+            return new AesEncryptedObject(new Serialization.BurrowObject(aesEncryptedByteSegment.Bytes), aesEncryptedByteSegment.Key, aesEncryptedByteSegment.Iv);
         }
 
-        public static AESEncryptedObject From(byte[] bytes, int offset, int length)
+        public static AesEncryptedObject For(byte[] bytes) { return For(new ArraySegment<byte>(bytes)); }
+
+        public static AesEncryptedObject For(ArraySegment<byte> bytes)
         {
-            var encryptedByteSegment = AESEncryptedByteSegment.Encrypt(bytes, offset, length, 4);
+            var encryptedByteSegment = Aes.Encrypt(bytes, 4);
             encryptedByteSegment.Bytes.Array[0] = 0;
             encryptedByteSegment.Bytes.Array[1] = 0;
             encryptedByteSegment.Bytes.Array[2] = 0;
             encryptedByteSegment.Bytes.Array[3] = 0;
-            return new AESEncryptedObject(new Serialization.BurrowObject(encryptedByteSegment.Bytes), encryptedByteSegment.Key, encryptedByteSegment.Iv);
+            return new AesEncryptedObject(new Serialization.BurrowObject(encryptedByteSegment.Bytes), encryptedByteSegment.Key, encryptedByteSegment.Iv);
         }
 
         // *** Object ***
@@ -122,7 +125,7 @@ namespace SafeBox.Burrow
         public readonly ArraySegment<byte> Key;
         public readonly ArraySegment<byte> Iv;
 
-        public AESEncryptedObject(Serialization.BurrowObject obj, ArraySegment<byte> aesKey, ArraySegment<byte> aesIv)
+        public AesEncryptedObject(Serialization.BurrowObject obj, ArraySegment<byte> aesKey, ArraySegment<byte> aesIv)
         {
             this.Object = obj;
             this.Key = aesKey;

@@ -5,9 +5,9 @@ using System.Text;
 using System.IO;
 using System.Threading;
 
-namespace SafeBox.Burrow.Folder
+namespace SafeBox.Burrow.Backend.Folder
 {
-    public class Account : Abstract.Account
+    public class Account : Backend.Account
     {
         public readonly string Folder;
 
@@ -17,7 +17,7 @@ namespace SafeBox.Burrow.Folder
             Folder = store.Folder + "\\" + identityHash.Hex();
         }
 
-        public override Abstract.Root Root(string name)
+        public override Backend.Root Root(string name)
         {
             if (!IsValidRootName(name)) return null;
             return new Root(this, name);
@@ -31,8 +31,8 @@ namespace SafeBox.Burrow.Folder
         void DeleteAsync(DeleteResult handler) 
         {
             var suffix = "-deleted-" + Burrow.Static.RandomHex(8);
-            var success = Burrow.Static.DirectoryMove(Folder, Folder + suffix);
-            Burrow.Static.DirectoryDelete(Folder + suffix);
+            var success = Burrow.Static.DirectoryMove(Folder, Folder + suffix, LogLevel.Warning);
+            Burrow.Static.DirectoryDelete(Folder + suffix, LogLevel.Warning);
             Burrow.Static.SynchronizationContext.Post(new SendOrPostCallback(obj => handler(success)), null);
         }
 

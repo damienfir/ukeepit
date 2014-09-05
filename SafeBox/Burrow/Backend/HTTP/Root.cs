@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SafeBox.Burrow.Configuration;
 
-namespace SafeBox.Burrow.HTTP
+namespace SafeBox.Burrow.Backend.HTTP
 {
-    class Root : Abstract.Root
+    class Root : Backend.Root
     {
         public Root(Account account, string name) : base(account, name) { }
 
@@ -14,7 +15,7 @@ namespace SafeBox.Burrow.HTTP
             throw new NotImplementedException();
         }
 
-        public override void Post(IEnumerable<ObjectUrl> add, IEnumerable<Hash> remove, UnlockedPrivateIdentity identity, PostResult handler)
+        public override void Post(IEnumerable<ObjectUrl> add, IEnumerable<Hash> remove, PrivateIdentity identity, PostResult handler)
         {
             throw new NotImplementedException();
         }

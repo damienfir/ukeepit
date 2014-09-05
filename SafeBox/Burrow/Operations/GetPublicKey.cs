@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SafeBox.Burrow.Abstract;
+using SafeBox.Burrow.Backend;
 using SafeBox.Burrow.Serialization;
 
 namespace SafeBox.Burrow.Operations
@@ -33,7 +33,7 @@ namespace SafeBox.Burrow.Operations
         private void GetDone(BurrowObject obj, ObjectStore store)
         {
             if (obj == null) { handler(null); return; }
-            var publicKey = PublicKey.From(obj.Hash(), obj.Data);
+            var publicKey = PublicKey.From(obj.Hash(), Dictionary.From(obj));
             Cache.PublicKeysByHash[Hash] = publicKey;
             handler(publicKey);
         }

@@ -17,28 +17,26 @@ namespace SafeBox.Burrow
             return list;
         }
 
-        public static ImmutableStack<T> From<T>(IEnumerable<T> elements) {
+        public static ImmutableStack<T> From<T>(IEnumerable<T> elements)
+        {
             var list = new ImmutableStack<T>();
             if (elements == null) return list;
             foreach (var element in elements) list = list.With(element);
-            return list; 
+            return list;
         }
 
-        public static ImmutableStack<T> FromNotNull<T>(IEnumerable<T> elements) {
+        public static ImmutableStack<T> FromNotNull<T>(IEnumerable<T> elements)
+        {
             var list = new ImmutableStack<T>();
             if (elements == null) return list;
             foreach (var element in elements) if (element != null) list = list.With(element);
-            return list; 
+            return list;
         }
 
     }
 
     public class ImmutableStack<T> : IEnumerable<T>
     {
-        // *** Static ***
-
-        // *** Object ***
-
         public readonly int Length;
         public readonly T Head;
         public readonly ImmutableStack<T> Tail;
@@ -68,18 +66,19 @@ namespace SafeBox.Burrow
             Tail = tail;
         }
 
-        public ImmutableStack(ImmutableStack<T> stack, T element)
+        public ImmutableStack(ImmutableStack<T> tail, T element)
         {
-            Length = stack.Length + 1;
+            Length = tail.Length + 1;
             Head = element;
-            Tail = stack;
+            Tail = tail;
         }
 
         public ImmutableStack<T> With(T element) { return new ImmutableStack<T>(this, element); }
 
-        public ImmutableStack<T> With(params T[] elements) {
+        public ImmutableStack<T> With(params T[] elements)
+        {
             var stack = this;
-            foreach (var element in elements) stack = new ImmutableStack<T>(this, element); 
+            foreach (var element in elements) stack = new ImmutableStack<T>(this, element);
             return stack;
         }
 
@@ -103,14 +102,9 @@ namespace SafeBox.Burrow
         public T[] ToArray()
         {
             var array = new T[Length];
-            var i = 0;
             var element = this;
-            while (i < Length)
-            {
+            for (var i = 0; i < Length; i++, element = element.Tail)
                 array[i] = element.Head;
-                i++;
-                element = element.Tail;
-            }
             return array;
         }
     }

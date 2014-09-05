@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SafeBox.Burrow.Configuration;
 
-namespace SafeBox.Burrow.HTTP
+namespace SafeBox.Burrow.Backend.HTTP
 {
-    class ObjectStore : Abstract.ObjectStore
+    class ObjectStore : Backend.ObjectStore
     {
-        public ObjectStore(string url)
-            : base(url)
-        { }
+        public static ObjectStore ForUrl(string url) { return null; }
+
+        public ObjectStore(string url) : base(url, 50) { }
 
         public override void HasObject(Hash hash, HasObjectResult handler)
         {
@@ -21,7 +22,7 @@ namespace SafeBox.Burrow.HTTP
             throw new NotImplementedException();
         }
 
-        public override void PutObject(Object serializedObject, UnlockedPrivateIdentity identity, PutObjectResult handler)
+        public override void PutObject(Object serializedObject, PrivateIdentity identity, PutObjectResult handler)
         {
             throw new NotImplementedException();
         }

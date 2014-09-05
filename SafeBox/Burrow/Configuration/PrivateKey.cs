@@ -8,20 +8,20 @@ namespace SafeBox.Burrow
 {
     public class PrivateKey
     {
-        public static PrivateKey From(Configuration.Dictionary dictionary)
+        public static PrivateKey From(Configuration.IniFileSection section)
         {
-            if (dictionary == null) return null;
+            if (section == null) return null;
 
             // Load the key from the dictionary
             var key = new RSAParameters();
-            key.Modulus = dictionary.Get("modulus", null as byte[]);
-            key.Exponent = dictionary.Get("exponent", null as byte[]);
-            key.D = dictionary.Get("d", null as byte[]);
-            key.P = dictionary.Get("p", null as byte[]);
-            key.Q = dictionary.Get("q", null as byte[]);
-            key.DP = dictionary.Get("d mod p", null as byte[]);
-            key.DQ = dictionary.Get("d mod q", null as byte[]);
-            key.InverseQ = dictionary.Get("inv(q) mod p", null as byte[]);
+            key.Modulus = section.Get("modulus", null as byte[]);
+            key.Exponent = section.Get("exponent", null as byte[]);
+            key.D = section.Get("d", null as byte[]);
+            key.P = section.Get("p", null as byte[]);
+            key.Q = section.Get("q", null as byte[]);
+            key.DP = section.Get("d mod p", null as byte[]);
+            key.DQ = section.Get("d mod q", null as byte[]);
+            key.InverseQ = section.Get("inv(q) mod p", null as byte[]);
             if (key.Modulus == null || key.Exponent == null || key.D == null) return null;
 
             // Load the key from the dictionary
@@ -39,12 +39,13 @@ namespace SafeBox.Burrow
             this.RSACryptoServiceProvider = rsaCryptoServiceProvider;
         }
 
-        public byte[] Encrypt(ArraySegment<byte> bytes) { return RSACryptoServiceProvider.Encrypt(Static.ByteArray(bytes), true); }
-        public byte[] Decrypt(ArraySegment<byte> bytes) { return RSACryptoServiceProvider.Decrypt(Static.ByteArray(bytes), true); }
+        public byte[] Encrypt(ArraySegment<byte> bytes) { return RSACryptoServiceProvider.Encrypt(Static.ToByteArray(bytes), true); }
+        public byte[] Decrypt(ArraySegment<byte> bytes) { return RSACryptoServiceProvider.Decrypt(Static.ToByteArray(bytes), true); }
         public byte[] Sign(Hash hash) { return RSACryptoServiceProvider.SignHash(hash.Bytes(), "SHA256"); }
-        public bool Verify(Hash hash, ArraySegment<byte> signatureBytes) { return RSACryptoServiceProvider.VerifyHash(hash.Bytes(), "SHA256", Static.ByteArray(signatureBytes)); }
+        public bool Verify(Hash hash, ArraySegment<byte> signatureBytes) { return RSACryptoServiceProvider.VerifyHash(hash.Bytes(), "SHA256", Static.ToByteArray(signatureBytes)); }
     }
 
+    /*
     public class UnlockedPrivateKey
     {
         public readonly Hash Hash;
@@ -55,4 +56,5 @@ namespace SafeBox.Burrow
             this.PrivateKey = privateKey;
         }
     }
+     */
 }

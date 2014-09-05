@@ -10,5 +10,6 @@ namespace SafeBox.Burrow
     {
         public Dictionary<Hash, PublicKey> PublicKeysByHash = new Dictionary<Hash, PublicKey>();
         public Dictionary<Hash, PublicIdentity> PublicIdentitiesByHash = new Dictionary<Hash, PublicIdentity>();
+        public Dictionary<Hash, PrivateKey> PrivateKeysByHash = new Dictionary<Hash, PrivateKey>();
     }
 }

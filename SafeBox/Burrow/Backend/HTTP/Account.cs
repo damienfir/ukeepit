@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SafeBox.Burrow.HTTP
+namespace SafeBox.Burrow.Backend.HTTP
 {
-    class Account : Abstract.Account
+    class Account : Backend.Account
     {
-        public Account(ObjectStore store, Hash identityHash) : base(store, identityHash) { }
+        public Account(AccountStore store, Hash identityHash) : base(store, identityHash) { }
 
-        public override Abstract.Root Root(string name)
+        public override Backend.Root Root(string name)
         {
             throw new NotImplementedException();
         }

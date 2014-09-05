@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 
-namespace SafeBox.Burrow.Folder
+namespace SafeBox.Burrow.Backend.Folder
 {
     public class Static
     {
