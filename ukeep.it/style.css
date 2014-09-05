@@ -1,0 +1,30 @@
+body,input	{font-family:"Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif; font-size:16px}
+body	{margin:0 0}
+p,pre	{margin:8px 0 0 0; padding:0 0 0 0}
+h1	{font-size:45px; font-weight:200; margin:0 0; line-height:50px}
+h2	{color:#666666; font-size:28px; font-weight:200; margin:28px 0 12px 0}
+h3	{color:#666666; font-size:20px; font-weight:200; margin:16px 0 8px 0}
+
+a	{color:#0066cc; text-decoration:none}
+a:hover		{color:#003399}
+
+@font-face {
+	font-family: "Source Sans Pro";
+	src: local(Source Sans Pro Light), url(/SourceSansPro-Light.ttf);
+	font-weight: 200;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Source Sans Pro";
+	src: local(Source Sans Pro), url(/SourceSansPro-Regular.ttf);
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Source Sans Pro";
+	src: local(Source Sans Pro Bold), url(/SourceSansPro-Bold.ttf);
+	font-weight: bold;
+	font-style: normal;
+}

@@ -1,0 +1,23 @@
+#! /usr/bin/perl
+use strict;
+
+#&startServer('/srv/data/uKeepIt/server', 'ukeepit-server');	# 80XX
+print 'There is nothing to start right now.', "\n";
+
+sub startServer {
+	my $folder = shift;
+	my $executable = shift;
+	
+	open F, '-|', 'ps aux';
+	my @lines = grep { $_ =~ /$executable/ } <F>;
+	close F;
+
+	if (scalar @lines) {
+		print @lines;
+		return;
+	}
+	
+	my $cmd = "cd '$folder'; './$executable' &";
+	print '>> ', $cmd, "\n";
+	system($cmd) && die 'Error running the command';
+}
