@@ -27,26 +27,26 @@ namespace SafeBox.Burrow.DataTree
             if (bytes.Count < 1 + 4) return null;
 
             // Read the mime type
-            int mimeTypeLength = BigEndian.Int8(bytes.Array, bytes.Offset);
+            var mimeTypeLength = BigEndian.Int8(bytes.Array, bytes.Offset);
             if (bytes.Count < 1 + mimeTypeLength + 4) return null;
             var mimeType = System.Text.Encoding.UTF8.GetString(bytes.Array, bytes.Offset + 1, mimeTypeLength);
 
             // Read the node count
             var pos = bytes.Offset + 1 + mimeTypeLength + 4;
-            int count = BigEndian.Int32(bytes.Array, pos);
+            var count = BigEndian.Int32(bytes.Array, pos);
             if (pos + 4 + count * 4 > bytes.Offset + bytes.Count) return null;
 
             // Read the offsets
             var offsets = new int[count + 1];
             offsets[0] = 0;
-            for (var i = 1; i <= count; i++) offsets[i] = BigEndian.Int32(bytes.Array, bytes.Offset + i * 4);
+            for (var i = 1; i <= count; i++) offsets[i] = BigEndian.Int32(bytes.Array, pos + i * 4);
 
             // Verify the length (we silently accept trailing data)
-            var dataStart = 4 + count * 4;
+            var dataStart = pos + 4 + count * 4;
             var dataLength = offsets[count];
-            if (dataStart + dataLength < bytes.Count) return null;
+            if (dataStart + dataLength > bytes.Offset + bytes.Count) return null;
 
-            return new PartialTree(obj, offsets, new ArraySegment<byte>(bytes.Array, bytes.Offset + dataStart, dataLength));
+            return new PartialTree(obj, offsets, new ArraySegment<byte>(bytes.Array, dataStart, dataLength));
         }
 
         public readonly BurrowObject Object;
@@ -79,7 +79,7 @@ namespace SafeBox.Burrow.DataTree
             // Get the position
             var pos = data.Offset + offsets[index];
             var end = data.Offset + offsets[index + 1];
-            if (pos + 5 > end) return;
+            if (pos + 1 + 4 + 2 > end) return;
 
             // Read the type
             nodes[index].Type = BigEndian.UInt8(data.Array, pos);
@@ -91,7 +91,9 @@ namespace SafeBox.Burrow.DataTree
             pos += 4;
             var labelLength = BigEndian.Int16(data.Array, pos);
             pos += 2;
+            if (pos + labelLength > end) return;
             nodes[index].Label = new ArraySegment<byte>(data.Array, pos, labelLength);
+            pos += labelLength;
 
             if (nodes[index].Type == 0)
             {
@@ -121,18 +123,18 @@ namespace SafeBox.Burrow.DataTree
                 {
                     // BROOM value
                     if (pos + 2 > end) return;
-                    var len = BigEndian.UInt16(data.Array, pos);
+                    var length = BigEndian.UInt16(data.Array, pos);
                     pos += 2;
-                    if (pos + len > end) return;
-                    node.MergeBroom(new ArraySegment<byte>(data.Array, pos, len));
-                    pos += len;
+                    if (pos + length > end) return;
+                    node.MergeBroom(new ArraySegment<byte>(data.Array, pos, length));
+                    pos += length;
                 }
                 else if (type == 254)
                 {
                     // TOP value
-                    if (pos + 10 > end) return;
+                    if (pos + 8 + 2 > end) return;
                     node.MergeTop(BigEndian.Int64(data.Array, pos), BigEndian.UInt16(data.Array, pos+8));
-                    pos += 10;
+                    pos += 8 + 2;
                 }
                 else if (type == 253)
                 {
@@ -145,21 +147,21 @@ namespace SafeBox.Burrow.DataTree
                 {
                     // Value with UInt32 length (we only handle 31 bits)
                     if (pos + 4 > end) return;
-                    var len = BigEndian.Int32(data.Array, pos);
+                    var length = BigEndian.Int32(data.Array, pos);
                     pos += 4;
-                    if (pos + len > end) return;
-                    node.MergeBytes(new ArraySegment<byte>(data.Array, pos, len));
-                    pos += len;
+                    if (pos + length > end) return;
+                    node.MergeBytes(new ArraySegment<byte>(data.Array, pos, length));
+                    pos += length;
                 }
                 else if (type == 251)
                 {
                     // Value with UInt16 length
                     if (pos + 2 > end) return;
-                    var len = BigEndian.UInt16(data.Array, pos);
+                    var length = BigEndian.UInt16(data.Array, pos);
                     pos += 2;
-                    if (pos + len > end) return;
-                    node.MergeBytes(new ArraySegment<byte>(data.Array, pos, len));
-                    pos += len;
+                    if (pos + length > end) return;
+                    node.MergeBytes(new ArraySegment<byte>(data.Array, pos, length));
+                    pos += length;
                 }
                 else
                 {
