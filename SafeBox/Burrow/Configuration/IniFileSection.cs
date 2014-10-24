@@ -24,13 +24,14 @@ namespace SafeBox.Burrow.Configuration
 
         public string ToText()
         {
+            if (Pairs.Count == 0) return "";
             var text = "";
             foreach (var tuple in Pairs)
             {
-                var value = tuple.Value.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\0", "\\0");
+                var value = tuple.Value.Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\0", "\\0");
                 text += tuple.Key + " = " + value + "\n";
             }
-            return text;
+            return text + "\n";
         }
 
         public static bool ValidKey(string key)
@@ -60,6 +61,7 @@ namespace SafeBox.Burrow.Configuration
         public void Set(string key, string value)
         {
             if (!ValidKey(key)) return;
+            if (value == null) { Pairs.Remove(key); return; }
             value.Replace('\0', ' ');
             value.Replace('\n', ' ');
             value.Replace('\r', ' ');

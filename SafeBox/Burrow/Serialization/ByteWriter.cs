@@ -7,34 +7,35 @@ namespace SafeBox.Burrow.Serialization
 {
     // A byte chain with fast append and traverse operations (at the expense of a little bit of memory overhead).
     // For optimization reasons, this is not an immutable chain.
-    public class ByteChain
+    public class ByteWriter
     {
-        ByteChainArray first;
-        ByteChainArray last;
+        ByteChain first;
+        ByteChain last;
         int byteLength = 0;
 
-        public ByteChain(int bufferSize = 4) {
-            first = new ByteChainArray(bufferSize); 
+        public ByteWriter(int bufferSize = 4) {
+            first = new ByteChain(bufferSize); 
             last = first; 
         }
 
         // Append another chain (=concat). Note that the other chain is unusable afterwards.
-        public void Append(ByteChain chain)
+        public void Append(ByteWriter byteWriter)
         {
-            last.next = chain.first;
-            last = chain.last;
-            chain.last = null;  // If somebody tries to reuse the old chain, this would immediately raise an exception.
-            byteLength += chain.byteLength;
+            last.next = byteWriter.first;
+            last = byteWriter.last;
+            byteWriter.last = null;  // If somebody tries to reuse the old chain, this would immediately raise an exception.
+            byteLength += byteWriter.byteLength;
         }
 
         // Append more bytes.
         public void Append(byte[] bytes) { Append(new ArraySegment<byte>(bytes)); }
+        public void Append(string text) { Append(new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes(text))); }
         public void Append(ArraySegment<byte> bytes)
         {
             // Create a new chain if necessary
             if (last.used >= last.segments.Length)
             {
-                var newChain = new ByteChainArray(last.segments.Length * 2);
+                var newChain = new ByteChain(last.segments.Length * 2);
                 last.next = newChain;
                 last = newChain;
             }
@@ -59,14 +60,21 @@ namespace SafeBox.Burrow.Serialization
             }
             return offset;
         }
+
+        public byte[] ToBytes()
+        {
+            var bytes = new byte[byteLength];
+            WriteToByteArray(bytes, 0);
+            return bytes;
+        }
     }
 
-    internal class ByteChainArray
+    internal class ByteChain
     {
         internal int used = 0;
         internal ArraySegment<byte>[] segments;
-        internal ByteChainArray next = null;
+        internal ByteChain next = null;
 
-        internal ByteChainArray(int bufferSize) { segments = new ArraySegment<byte>[bufferSize]; }
+        internal ByteChain(int bufferSize) { segments = new ArraySegment<byte>[bufferSize]; }
     }
 }

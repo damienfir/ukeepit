@@ -5,6 +5,8 @@ using System.Text;
 using SafeBox.Burrow;
 using System.Threading;
 using System.IO;
+using SafeBox.Burrow.Configuration;
+using System.Windows.Threading;
 
 namespace SafeBox.Cards
 {
@@ -13,6 +15,8 @@ namespace SafeBox.Cards
         // Current Burrow configuration snapshot
         public readonly string ConfigurationFolder ;
         private Burrow.Configuration.Snapshot burrowSnapshot;
+        private DispatcherTimer reloadTimer;
+        private delegate void DelayedReloadDelegate();
         
         // Cached passwords and keys
         public static ImmutableDictionary<Hash, PrivateKey> PrivateKeys = new ImmutableDictionary<Hash, PrivateKey>();
@@ -23,24 +27,43 @@ namespace SafeBox.Cards
         public delegate void ReloadedHandler(Burrow.Configuration.Snapshot burrowSnapshot);
         public event EventHandler<EventArgs> Reloaded;
 
-        // 
-        public readonly Dictionary<string, SharedSpacesList> SharedSpacesListByHash = new Dictionary<string, SharedSpacesList>();
+        // Shared spaces
+        //public readonly Dictionary<string, SharedSpacesList> SharedSpacesListByHash = new Dictionary<string, SharedSpacesList>();
 
         public Configuration()
         {
+            // Field initialization
+            reloadTimer = new DispatcherTimer(new TimeSpan(10000 * 200), DispatcherPriority.Normal, new EventHandler(DelayedReload), Dispatcher.CurrentDispatcher);
+
             // Determine the configuration folder
             var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             ConfigurationFolder  = appDataFolder + "\\burrow-data.org";
 
-            // Create the default identity if necessary
-            CreateDefaultIdentity(new ImmutableDictionary<string, string>(), new ImmutableDictionary<string, string>());
+            // Create the default identity if no identity exists
+            CreateDefaultIdentityIfNecessary();
 
             // Load the configuration
             this.burrowSnapshot = Burrow.Configuration.FromFolder.Load(ConfigurationFolder , new ImmutableDictionary<Hash, PrivateKey>(), new ImmutableStack<ArraySegment<byte>>(), new ImmutableStack<ArraySegment<byte>>());
+
+            // Set up file change notification for the configuration folder
+            var watcher = new System.IO.FileSystemWatcher(ConfigurationFolder);
+            watcher.Changed += new FileSystemEventHandler(OnConfigurationChanged);
+            watcher.Created += new FileSystemEventHandler(OnConfigurationChanged);
+            watcher.Deleted += new FileSystemEventHandler(OnConfigurationChanged);
+            watcher.Renamed += new RenamedEventHandler(OnConfigurationChanged);
+            watcher.IncludeSubdirectories = true;
+            watcher.EnableRaisingEvents = true;
         }
 
         public Burrow.Configuration.Snapshot BurrowSnapshot { get { return burrowSnapshot; } }
 
+        private void OnConfigurationChanged(object source, FileSystemEventArgs e)
+        {
+            Burrow.Static.Log.Info("File: " + e.FullPath + " " + e.ChangeType);
+            Reload();
+        }
+
+        /*
         public SharedSpacesList SharedSpacesList(Burrow.Configuration.PrivateIdentity identity)
         {
             var sharedSpacesList = null as SharedSpacesList;
@@ -60,9 +83,23 @@ namespace SafeBox.Cards
             }
 
             return null;
+        } */
+
+        //public void ReloadNow(ReloadedHandler handler = null) { 
+        //    ThreadPool.QueueUserWorkItem(new WaitCallback(obj => ReloadAsync(handler))); 
+        //}
+
+        public void Reload() {
+            Console.WriteLine("scheduling reload " + reloadTimer.IsEnabled);
+            reloadTimer.IsEnabled = true;
         }
 
-        public void Reload(ReloadedHandler handler = null) { ThreadPool.QueueUserWorkItem(new WaitCallback(obj => ReloadAsync(handler))); }
+        private void DelayedReload(object timer, EventArgs e)
+        {
+            reloadTimer.IsEnabled = false;
+            Console.WriteLine("reload");
+            ThreadPool.QueueUserWorkItem(new WaitCallback(none => ReloadAsync(null)));
+        }
 
         private void ReloadAsync(ReloadedHandler handler)
         {
@@ -97,27 +134,38 @@ namespace SafeBox.Cards
             }), null);
         }
 
-        /*
-        public IdentityFolderForHash IdentityFolderForHash(Hash hash)
+        public Burrow.Configuration.IniFile ReadConfiguration()
         {
-            // Look through all identity folders
-            foreach (var identityFolder in Static.DirectoryEnumerateDirectories(Folder + "\\identities"))
-            {
-                var info = new IdentityFolderForHash(identityFolder);
-                if (info.IdentityHash.Equals(hash)) return info;
-            }
-
-            // Not found
-            return null;
+            var configuration = Burrow.Configuration.IniFile.From(Burrow.Static.FileBytes(ConfigurationFolder + "\\configuration"));
+            if (configuration == null) configuration = new Burrow.Configuration.IniFile();
+            return configuration;
         }
-         * */
+
+        public bool WriteConfiguration(Burrow.Configuration.IniFile configuration) {
+            return Burrow.Static.WriteFile(ConfigurationFolder + "\\configuration", configuration.ToBytes());
+        }
 
         // This creates an identity "default" unless it exists
-        public void CreateDefaultIdentity(ImmutableDictionary<string, string> privateInformation, ImmutableDictionary<string, string> publicInformation)
+        public void CreateDefaultIdentityIfNecessary()
+        {
+            var windowsUser = System.DirectoryServices.AccountManagement.UserPrincipal.Current;
+            var configuration = new Burrow.Configuration.IniFile();
+            var privateInformation = configuration.Section("private");
+            privateInformation.Set("name", windowsUser.DisplayName);
+            var publicInformation = configuration.Section("public");
+            publicInformation.Set("name", windowsUser.DisplayName);
+            publicInformation.Set("first name", windowsUser.GivenName);
+            publicInformation.Set("middle name", windowsUser.MiddleName);
+            publicInformation.Set("last name", windowsUser.Name);
+            CreateIdentity("default", configuration);
+        }
+
+        // Creates a new identity
+        public void CreateIdentity(string id, IniFile configuration)
         {
             // Create the folder
-            var folder =             ConfigurationFolder +"\\identities\\default";
-            if (Directory.Exists(folder) && File.Exists(folder+"\\public-key")) return;
+            var folder =             ConfigurationFolder +"\\identities\\"+id;
+            if (Directory.Exists(folder) && File.Exists(folder + "\\public-rsa-key")) return;
             Burrow.Static.DirectoryCreate(folder, LogLevel.Warning);
 
             // Create a key pair
@@ -148,16 +196,11 @@ namespace SafeBox.Cards
             var aesIv = new byte[16];
             Burrow.Static.Random.NextBytes(aesIv);
             var encryptedPrivateKey = Burrow.Aes.Encrypt(new ArraySegment<byte>(privateKey.ToBytes()), aesKey, aesIv );
-            Burrow.Static.WriteFile(folder+"\\encrypted-private-rsa-key", encryptedPrivateKey);
+            Burrow.Static.WriteFile(folder+"\\aes-encrypted-private-rsa-key", encryptedPrivateKey);
+            var privateKeyInfoSection = configuration.Section("private key");
+            privateKeyInfoSection.Set("aes iv", aesIv);
 
             // Write the configuration file
-            var configuration = new Burrow.Configuration.IniFile();
-            var privateSection= configuration.Section("private");
-            foreach (var pair in privateInformation) privateSection.Set(pair.Key, pair.Value);
-            var publicSection= configuration.Section("public");
-            foreach (var pair in publicInformation) publicSection.Set(pair.Key, pair.Value);
-            var privateKeyInfoSection= configuration.Section("private key");
-            privateKeyInfoSection.Set("aes iv", aesIv);
             Burrow.Static.WriteFile(folder+"\\configuration", configuration.ToBytes());
         }
     }

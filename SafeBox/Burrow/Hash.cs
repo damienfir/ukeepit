@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using SafeBox.Burrow.Serialization.Text;
 using SafeBox.Burrow.Serialization;
 
 namespace SafeBox.Burrow
@@ -141,7 +140,16 @@ namespace SafeBox.Burrow
             return 0;
         }
 
-        public static bool operator ==(Hash a, Hash b) { return a.Equals(b); }
-        public static bool operator !=(Hash a, Hash b) { return !a.Equals(b); }
+        public static bool operator ==(Hash a, Hash b)
+        {
+            if (object.ReferenceEquals(a, b)) return true;
+            var anull = object.ReferenceEquals(a, null);
+            var bnull = object.ReferenceEquals(b, null);
+            if (anull && bnull) return true;
+            if (anull || bnull) return false;
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Hash a, Hash b) { return !(a == b); }
     }
 }

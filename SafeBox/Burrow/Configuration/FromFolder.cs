@@ -66,13 +66,13 @@ namespace SafeBox.Burrow.Configuration
         public static PrivateIdentity LoadIdentity(string identityFolder, ImmutableDictionary<Hash, PrivateKey> knownPrivateKeys, ImmutableStack<ArraySegment<byte>> knownPasswords, ImmutableStack<ArraySegment<byte>> knownAesKeys)
         {
             // Read the configuration file
-            var configuration = IniFile.From(Static.FileUtf8Lines(identityFolder + "/configuration", new string[0]));
+            var configuration = IniFile.From(Static.FileUtf8Lines(identityFolder + "\\configuration", new string[0]));
 
             // Read the public key
-            var publicKeyBytes = new ArraySegment<byte>(Static.FileBytes(identityFolder + "\\public-key", null));
-            var publicKeyObject = new BurrowObject(publicKeyBytes);
+            var publicKeyBytes = Static.FileBytes(identityFolder + "\\public-rsa-key").ToByteSegment();
+            var publicKeyObject = BurrowObject.From(publicKeyBytes);
             if (publicKeyObject == null) return null;
-            var publicKey = PublicKey.From(publicKeyObject.Hash(), Dictionary.From(publicKeyObject));
+            var publicKey = PublicKey.From(publicKeyObject);
             if (publicKey == null) return null;
 
             // Check if we have a private key for this
@@ -86,7 +86,7 @@ namespace SafeBox.Burrow.Configuration
             if (aesIv.Length != 16) return new PrivateIdentity(configuration, publicKey, publicKeyBytes, null);
 
             // Load the encrypted private key
-            var encryptedPrivateKeySegment = new ArraySegment<byte>(Static.FileBytes(identityFolder + "\\encrypted-private-key", null));
+            var encryptedPrivateKeySegment = Static.FileBytes(identityFolder + "\\aes-encrypted-private-rsa-key").ToByteSegment();
             if (encryptedPrivateKeySegment.Array == null) return new PrivateIdentity(configuration, publicKey, publicKeyBytes, null);
 
             // Try decrypting with all known keys
@@ -225,21 +225,32 @@ namespace SafeBox.Burrow.Configuration
         {
             return new ConfiguredIdentity(name);
         } */
+
+        public static ImmutableStack<IdentityFolder> IdentityFolders(string folder)
+        {
+            var identityFolders = new ImmutableStack<IdentityFolder>();
+            var identitiesFolder = folder + "\\identities";
+            foreach (var id in Static.DirectoryEnumerateDirectories(identitiesFolder))
+            {
+                identityFolders = identityFolders.With( new IdentityFolder(identitiesFolder + "\\" + id));
+            }
+
+            return identityFolders;
+        }
+
     }
 
-
-
-    public class IdentityFolderForHash
+    public class IdentityFolder
     {
         public readonly string Folder;
         public readonly Hash IdentityHash;
         public readonly byte[] PublicKeyBytes;
 
-        public IdentityFolderForHash(string identityFolder)
+        public IdentityFolder(string identityFolder)
         {
             this.Folder = identityFolder;
-            this.PublicKeyBytes = Static.FileBytes(identityFolder + "\\public-key", null);
-            this.IdentityHash = PublicKey.IdentityHashForPublicKeyBytes(PublicKeyBytes);
+            this.PublicKeyBytes = Static.FileBytes(identityFolder + "\\public-rsa-key", null);
+            this.IdentityHash = Hash.For(PublicKeyBytes);
         }
     }
 }

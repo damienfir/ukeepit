@@ -33,7 +33,7 @@ namespace SafeBox.Burrow.Operations
         private void GetDone(BurrowObject obj, ObjectStore store)
         {
             if (obj == null) { handler(null); return; }
-            var publicKey = PublicKey.From(obj.Hash(), Dictionary.From(obj));
+            var publicKey = PublicKey.From(obj);
             Cache.PublicKeysByHash[Hash] = publicKey;
             handler(publicKey);
         }

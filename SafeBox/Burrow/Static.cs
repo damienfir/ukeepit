@@ -10,7 +10,7 @@ using SafeBox.Burrow.Configuration;
 
 namespace SafeBox.Burrow
 {
-    class Static
+    public static class Static
     {
         // For simplicity, the following variables are allocated statically (global variables).
         // While an application may work with multiple configurations (unlikely, but thinkable), it makes sense that they all share these objects.
@@ -22,8 +22,14 @@ namespace SafeBox.Burrow
         {
             var hexChars = "0123456789abcdef";
             var chars = new char[length];
-            for (var i = 0; i < length; i++) chars[i] = hexChars[Random.Next()];
+            for (var i = 0; i < length; i++) chars[i] = hexChars[Random.Next(16)];
             return new string(chars);
+        }
+
+        public static ArraySegment<byte> RandomBytes(int length){
+            var bytes = new byte[length];
+            Random.NextBytes(bytes);
+            return bytes.ToByteSegment();
         }
 
         // Safe names for use on filesystems and elsewhere
@@ -95,7 +101,7 @@ namespace SafeBox.Burrow
 
         // *** File operations ***
 
-        public static byte[] FileBytes(string file, byte[] defaultBytes, int logLevel = LogLevel.None)
+        public static byte[] FileBytes(string file, byte[] defaultBytes = null, int logLevel = LogLevel.None)
         {
             try { return File.ReadAllBytes(file); }
             catch (Exception ex)
@@ -243,7 +249,7 @@ namespace SafeBox.Burrow
         public static BurrowObject CreateEnvelope(HashWithAesParameters hashWithAesParameters, PrivateIdentity sender, IEnumerable<PublicIdentity> receiver)
         {
             // Create serialization structures
-            var hashCollector = new HashCollector();
+            var hashCollector = new ObjectHeader();
 
             // Create an envelope
             var envelope = new DictionaryConstructor();
@@ -255,24 +261,29 @@ namespace SafeBox.Burrow
             envelope.Add("signature", sender.PrivateKey.Sign(hashWithAesParameters.Hash));
             
             // Add encrypted AES keys
-            var encryptedAesKeysDictionary = new DictionaryConstructor();
-            encryptedAesKeysDictionary.Add(senderHash.Bytes(), sender.PublicKey.Encrypt(hashWithAesParameters.Key));
-            envelope.Add("encrypted aes key", encryptedAesKeysDictionary.Serialize(hashCollector));
+            envelope.Add(EncryptedAESKeyFor(senderHash), sender.PublicKey.Encrypt(hashWithAesParameters.Key));
             envelope.Add("aes iv", hashWithAesParameters.Iv);
 
             // Add the encrypted content keys
             foreach (var publicIdentity in receiver)
             {
-                var hashHex = publicIdentity.PublicKey.Hash.Hex();
                 if (senderHash !=publicIdentity.PublicKey.Hash)
-                    encryptedAesKeysDictionary.Add(hashHex, publicIdentity.PublicKey.Encrypt(hashWithAesParameters.Key));
+                    envelope.Add(EncryptedAESKeyFor(publicIdentity.PublicKey.Hash), publicIdentity.PublicKey.Encrypt(hashWithAesParameters.Key));
                 foreach (var publicKey in publicIdentity.PublicKeys)
                     if (publicKey.Hash != publicIdentity.PublicKey.Hash)
-                        encryptedAesKeysDictionary.Add(publicKey.Hash.Hex(), publicKey.Encrypt(hashWithAesParameters.Key));
+                        envelope.Add(EncryptedAESKeyFor(publicKey.Hash), publicKey.Encrypt(hashWithAesParameters.Key));
             }
 
             // TODO: add AES keys for symmetric keys (shared secrets)
-            return BurrowObject.For(hashCollector, envelope.Serialize(hashCollector));
+            return envelope.ToBurrowObject();
+        }
+
+        private static byte[] EncryptedAESKeyFor(Hash hash)
+        {
+            var bytes = new ByteWriter();
+            bytes.Append("rsa encrypted aes key for ");
+            bytes.Append(hash.Bytes());
+            return bytes.ToBytes();
         }
 
         public static HashWithAesParameters OpenEnvelope(BurrowObject obj, PrivateIdentity identity, IEnumerable<PublicIdentity> publicIdentities)
@@ -280,11 +291,11 @@ namespace SafeBox.Burrow
             var envelope = Dictionary.From(obj);
 
             // Get the content hash
-            var contentHash = envelope.GetHash("content");
+            var contentHash = envelope.Get("content").AsHash();
             if (contentHash == null) return null;
 
             // Find the signer
-            var senderHash = envelope.GetHash("sender");
+            var senderHash = envelope.Get("sender").AsHash();
             if (senderHash == null) return null;
 
             PublicIdentity signer = null;
@@ -305,19 +316,18 @@ namespace SafeBox.Burrow
             }
 
             // Decrypt the AES key
-            var encryptedAESKeys = Dictionary.From(obj, envelope.Get("encrypted aes key"));
-            var encryptedAESKey = encryptedAESKeys.Get(identity.PublicKey.Hash.Bytes());
+            var encryptedAESKey = envelope.Get(EncryptedAESKeyFor(identity.PublicKey.Hash));
             if (encryptedAESKey == null) return null;
             var aesKey = identity.PrivateKey.Decrypt(encryptedAESKey);
             if (aesKey == null) return null;
-            var aesIv = envelope.Get("aes iv");
+            var aesIv = envelope.Get("aes iv").AsBytes();
             if (aesIv.Array == null) return null;
 
             // Returns the hash with the AES parameters (TODO: return the hash of the signer, since some content will only be allowed from some signers)
             return new HashWithAesParameters(contentHash, new ArraySegment<byte>(aesKey), aesIv);
         }
 
-        private ImmutableStack<ObjectStore> CreateObjectStoreList(IEnumerable<string> urls, ImmutableStack<ObjectStore> knownObjectStores)
+        private static ImmutableStack<ObjectStore> CreateObjectStoreList(IEnumerable<string> urls, ImmutableStack<ObjectStore> knownObjectStores)
         {
             var objectStores = new ImmutableStack<ObjectStore>();
 
@@ -457,10 +467,11 @@ namespace SafeBox.Burrow
             return bytes;
         }
 
-        public static ArraySegment<byte> ToByteSegment(this byte[] byteArray) { return new ArraySegment<byte>(byteArray); }
+        public static ArraySegment<byte> ToByteSegment(this byte[] byteArray) { return byteArray == null ? default(ArraySegment<byte>) : new ArraySegment<byte>(byteArray); }
 
         // Empty byte sequences
-        public static byte[] EmptyByteArray = new byte[0];
-        public static ArraySegment<byte> EmptyByteSegment = new ArraySegment<byte>(EmptyByteArray, 0, 0);
+        public static const byte[] EmptyByteArray = new byte[0];
+        public static const ArraySegment<byte> EmptyByteSegment = new ArraySegment<byte>(EmptyByteArray, 0, 0);
+        public static const ArraySegment<byte> NullByteSegment = new ArraySegment<byte>(null, 0, 0);
     }
 }

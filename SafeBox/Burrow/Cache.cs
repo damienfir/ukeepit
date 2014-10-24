@@ -6,7 +6,7 @@ using System.Text;
 namespace SafeBox.Burrow
 {
     // Any instance must be used on a single thread only.
-    class Cache
+    public class Cache
     {
         public Dictionary<Hash, PublicKey> PublicKeysByHash = new Dictionary<Hash, PublicKey>();
         public Dictionary<Hash, PublicIdentity> PublicIdentitiesByHash = new Dictionary<Hash, PublicIdentity>();

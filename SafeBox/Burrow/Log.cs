@@ -9,11 +9,11 @@ namespace SafeBox.Burrow
     public class LogLevel
     {
         // We need to keep ints here, because the compiler expects compile time constants in default function arguments
-        public static const int Error = 20;
-        public static const int Warning = 10;
-        public static const int Info = 5;
-        public static const int Debug = 1;
-        public static const int None = 0;
+        public const int Error = 20;
+        public const int Warning = 10;
+        public const int Info = 5;
+        public const int Debug = 1;
+        public const int None = 0;
 
         public static string StringFromLevel(int level)
         {
@@ -31,7 +31,7 @@ namespace SafeBox.Burrow
         public event EventHandler<LogEntryEventArgs> NewEntry;
         
         public void Message(int level, string text) {
-            if (level == None) return;
+            if (level == LogLevel.None) return;
             var entry = new LogEntryEventArgs(level, text);
             Static.SynchronizationContext.Post(new SendOrPostCallback(obj => { if (NewEntry != null) NewEntry(null, entry); }), null);
         }

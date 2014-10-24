@@ -8,11 +8,11 @@ namespace SafeBox.Burrow.Serialization
 {
     public class RecordsConstructor
     {
-        public List<ByteChain> Records = new List<ByteChain>();
+        public List<ByteWriter> Records = new List<ByteWriter>();
         public RecordsConstructor() { }
-        public void Add(ByteChain byteChain) { Records.Add(byteChain); }
+        public void Add(ByteWriter byteChain) { Records.Add(byteChain); }
 
-        public ByteChain Serialize()
+        public ByteWriter Serialize()
         {
             // Record count
             var header = new byte[4 + Records.Count * 4];
@@ -27,7 +27,7 @@ namespace SafeBox.Burrow.Serialization
             }
 
             // Add header and all records
-            var byteChain = new ByteChain(1);
+            var byteChain = new ByteWriter(1);
             byteChain.Append(header);
             foreach (var record in Records) byteChain.Append(record);
             return byteChain;

@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using SafeBox.Burrow.Serialization;
+using SafeBox.Burrow.Configuration;
 
 namespace SafeBox.Burrow.Backend.Folder
 {
@@ -51,12 +52,12 @@ namespace SafeBox.Burrow.Backend.Folder
             handler(BurrowObject.From(Burrow.Static.FileBytes(file, null)));
         }
 
-        public override void PutObject(BurrowObject obj, UnlockedPrivateIdentity identity, PutObjectResult handler)
+        public override void PutObject(BurrowObject obj, PrivateIdentity identity, PutObjectResult handler)
         {
             ThreadPool.QueueUserWorkItem(new WaitCallback(dummy => PutObjectAsync(obj, identity, handler)));
         }
 
-        void PutObjectAsync(BurrowObject obj, UnlockedPrivateIdentity identity, PutObjectResult handler)
+        void PutObjectAsync(BurrowObject obj, PrivateIdentity identity, PutObjectResult handler)
         {
             // Check if that object exists already
             var hash = obj.Hash();

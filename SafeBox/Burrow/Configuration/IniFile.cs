@@ -43,7 +43,7 @@ namespace SafeBox.Burrow.Configuration
                 var trimmedLine = commentMatch.Success ? commentMatch.Groups[1].Value : line.Trim();
 
                 // Section
-                if (trimmedLine[0] == '[' && trimmedLine[trimmedLine.Length - 1] == ']')
+                if (trimmedLine.Length>2 && trimmedLine[0] == '[' && trimmedLine[trimmedLine.Length - 1] == ']')
                 {
                     section = iniFile.Section(trimmedLine.Substring(1, trimmedLine.Length - 2).Trim());
                     continue;
@@ -62,7 +62,7 @@ namespace SafeBox.Burrow.Configuration
 
         private static string UnescapeChar(Match m)
         {
-            var c = m.Value;
+            var c = m.Groups[1].Value;
             if (c == "0") return "\0";
             if (c == "a") return "\a";
             if (c == "b") return "\b";
@@ -96,9 +96,11 @@ namespace SafeBox.Burrow.Configuration
 
         public string ToText()
         {
+            var section = null as IniFileSection;
             var text = "";
+            if (SectionsByName.TryGetValue("", out section) && section.Pairs.Count>0) text += section.ToText();
             foreach (var pair in SectionsByName)
-                text += pair.Key + " = " + pair.Value.ToText();
+                if (pair.Key != "") text += "[" + pair.Key + "]\n" + pair.Value.ToText();
             return text;
         }
 

@@ -11,17 +11,7 @@ namespace SafeBox.Burrow
     {
         // *** Static ***
 
-        public static Hash IdentityHashForPublicKeyBytes(byte[] publicKeyBytes)
-        {
-            // Calculate the identity hash
-            var publicKeyObjectBytes = new byte[4 + publicKeyBytes.Length];
-            publicKeyObjectBytes[0] = 0;
-            publicKeyObjectBytes[1] = 0;
-            publicKeyObjectBytes[2] = 0;
-            publicKeyObjectBytes[3] = 0;
-            System.Array.Copy(publicKeyBytes, 0, publicKeyObjectBytes, 4, publicKeyBytes.Length);
-            return Hash.For(publicKeyObjectBytes);
-        }
+        public static PublicKey From(BurrowObject obj) { return From(obj.Hash(), Dictionary.From(obj)); }
 
         public static PublicKey From(Hash hash, Dictionary dictionary)
         {

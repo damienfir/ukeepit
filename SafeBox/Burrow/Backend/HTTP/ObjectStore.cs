@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SafeBox.Burrow.Configuration;
+using SafeBox.Burrow.Serialization;
 
 namespace SafeBox.Burrow.Backend.HTTP
 {
@@ -22,7 +23,7 @@ namespace SafeBox.Burrow.Backend.HTTP
             throw new NotImplementedException();
         }
 
-        public override void PutObject(Object serializedObject, PrivateIdentity identity, PutObjectResult handler)
+        public override void PutObject(BurrowObject serializedObject, PrivateIdentity identity, PutObjectResult handler)
         {
             throw new NotImplementedException();
         }

@@ -18,7 +18,6 @@ namespace SafeBox
         // Single instance windows
         public static SingleInstanceWindow<StoresWindow> storesWindow = null;
         public static SingleInstanceWindow<LogWindow> logWindow = null;
-        public static SingleInstanceWindow<LogInWindow> logInWindow = null;
         public static SingleInstanceWindow<WelcomeWindow> welcomeWindow= null;
 
         // Configuration
@@ -37,9 +36,13 @@ namespace SafeBox
 
             // Single instance windows
             logWindow = new SingleInstanceWindow<LogWindow>(() => new LogWindow());
-            logInWindow= new SingleInstanceWindow<LogInWindow>(() => new LogInWindow());
             storesWindow = new SingleInstanceWindow<StoresWindow>(() => new StoresWindow());
             welcomeWindow = new SingleInstanceWindow<WelcomeWindow>(() => new WelcomeWindow());
+
+            logWindow.Show();
+            storesWindow.Show();
+
+            TraverseFolder(@"C:\Users\Thomas\Desktop\swi5t");
         }
 
         void BurrowConfiguration_Reloaded(Burrow.Configuration.Snapshot snapshot)
@@ -61,6 +64,21 @@ namespace SafeBox
             // Otherwise, show the main window
             new MainWindow(identity.Unlock(), true).Show();
              */
+        }
+
+        void TraverseFolder(string folder)
+        {
+            //var dataTree = new Burrow.DataTree.DataTreeConstructor();
+            //var files = dataTree.Root.Label("files");
+
+            foreach (var file in Directory.EnumerateFileSystemEntries(folder, "*", SearchOption.AllDirectories))
+            {
+                var fileInfo = new FileInfo(file);
+                if (!fileInfo.Exists) continue;
+                //files.Label(file).Label("size").Add(dataTree.BigEndian.Int64(fileInfo.Length));
+
+
+            }
         }
     }
 }

@@ -66,7 +66,7 @@ namespace SafeBox.Burrow
 
         public ImmutableDictionary<K, V> With(K key, V value) { return new ImmutableDictionary<K, V>(this, key, value); }
 
-        public ImmutableDictionary<K, V> With(params KeyValuePair<K, V> elements) { return With(elements); }
+        public ImmutableDictionary<K, V> With(params KeyValuePair<K, V>[] elements) { return With(elements); }
 
         public ImmutableDictionary<K, V> With(IEnumerable<KeyValuePair<K, V>> elements)
         {

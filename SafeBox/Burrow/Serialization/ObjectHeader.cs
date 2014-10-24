@@ -5,11 +5,11 @@ using System.Text;
 
 namespace SafeBox.Burrow.Serialization
 {
-    public class HashCollector
+    public class ObjectHeader
     {
         private List<Hash> hashes = new List<Hash>();
 
-        public HashCollector() { }
+        public ObjectHeader() { }
 
         public uint Add(Hash hash)
         {

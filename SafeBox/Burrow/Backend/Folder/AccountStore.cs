@@ -45,10 +45,5 @@ namespace SafeBox.Burrow.Backend.Folder
         }
 
         public override Backend.Account Account(Hash identityHash) { return new Account(this, identityHash); }
-
-        //public string AccountFolder(FolderAccount account) { return BaseFolder + "\\" + currentVersion + "\\" + account.IdentityHash.Hex(); }
-        //public string RootFolder(FolderRoot root) { return AccountFolder(root.FolderAccount) + "\\" + root.Name; }
-        public override void Accounts(Dictionary<string, string> query, AccountsResult handler) { handler(new List<Abstract.Account>()); }
-        public override Backend.Account Account(Hash identityHash) { return null; }
     }
 }

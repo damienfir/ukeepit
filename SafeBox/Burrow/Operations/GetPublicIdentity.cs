@@ -21,6 +21,7 @@ namespace SafeBox.Burrow.Operations
         {
             this.AccountStores = accountStores;
             this.ObjectStores = objectStores;
+            this.cache = cache;
             this.Hash = hash;
             this.handler = handler;
 
@@ -52,7 +53,7 @@ namespace SafeBox.Burrow.Operations
         private ImmutableStack<AccountStore> NewestPublicInformationStores = new ImmutableStack<AccountStore>();
         internal void PublicInformationCandidate(Dictionary publicInformation, AccountStore store)
         {
-            var registeredDate = publicInformation.Get("reg", 0L);
+            var registeredDate = publicInformation.Get("reg").AsLong();
             if (NewestPublicInformationDictionary == null || NewestPublicInformationDate < registeredDate)
             {
                 NewestPublicInformationDate = registeredDate;
@@ -72,7 +73,7 @@ namespace SafeBox.Burrow.Operations
             if (expectedAccounts > 0) return;
 
             // Retrieve all associated public keys
-            var identities = NewestPublicInformationDictionary.Get("identities");
+            var identities = NewestPublicInformationDictionary.Get("identities").AsBytes();
             expectedAssociatedPublicKeys = identities.Count / 32;
             if (expectedAssociatedPublicKeys == 0) { WrapUp(); return; }
             for (var i = 0; i < identities.Count; i += 32)
@@ -153,9 +154,9 @@ namespace SafeBox.Burrow.Operations
             var envelope = Dictionary.From(obj);
 
             // Verify the signature of the envelope
-            var contentHash = envelope.GetHash("content");
+            var contentHash = envelope.Get("content").AsHash();
             if (contentHash == null) { GetPublicIdentityFromAccount.ObjectUrlDone(); return; }
-            var signature = envelope.Get("signature");
+            var signature = envelope.Get("signature").AsBytes();
             if (signature == null) { GetPublicIdentityFromAccount.ObjectUrlDone(); return; }
             if (!GetPublicIdentityFromAccount.GetPublicIdentity.PublicKey.VerifySignature(contentHash, signature)) { GetPublicIdentityFromAccount.ObjectUrlDone(); return; }
 

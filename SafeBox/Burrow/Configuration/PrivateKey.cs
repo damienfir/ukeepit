@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
+using SafeBox.Burrow.Serialization;
 
 namespace SafeBox.Burrow
 {
@@ -14,14 +15,14 @@ namespace SafeBox.Burrow
 
             // Load the key from the dictionary
             var key = new RSAParameters();
-            key.Modulus = section.Get("modulus", null as byte[]);
-            key.Exponent = section.Get("exponent", null as byte[]);
-            key.D = section.Get("d", null as byte[]);
-            key.P = section.Get("p", null as byte[]);
-            key.Q = section.Get("q", null as byte[]);
-            key.DP = section.Get("d mod p", null as byte[]);
-            key.DQ = section.Get("d mod q", null as byte[]);
-            key.InverseQ = section.Get("inv(q) mod p", null as byte[]);
+            key.Modulus = section.Get("modulus").ToByteArray();
+            key.Exponent = section.Get("exponent").ToByteArray();
+            key.D = section.Get("d").ToByteArray();
+            key.P = section.Get("p").ToByteArray();
+            key.Q = section.Get("q").ToByteArray();
+            key.DP = section.Get("d mod p").ToByteArray();
+            key.DQ = section.Get("d mod q").ToByteArray();
+            key.InverseQ = section.Get("inv(q) mod p").ToByteArray();
             if (key.Modulus == null || key.Exponent == null || key.D == null) return null;
 
             // Load the key from the dictionary

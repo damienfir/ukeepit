@@ -9,15 +9,11 @@ namespace SafeBox.Burrow.Serialization
     {
         // *** Static ***
 
-        public static BurrowObject From(byte[] bytes)
-        {
-            if (bytes == null) return null;
-            return new BurrowObject(new ArraySegment<byte>(bytes));
-        }
+        public static BurrowObject From(byte[] bytes) { return bytes == null ? null : new BurrowObject(new ArraySegment<byte>(bytes)); }
+        public static BurrowObject From(ArraySegment<byte> bytes) { return bytes.Array == null ? null : new BurrowObject(bytes); }
+        public static BurrowObject For(ObjectHeader hashCollector, byte[] data) { return For(hashCollector, new ArraySegment<byte>(data)); }
 
-        public static BurrowObject For(HashCollector hashCollector, byte[] data) { return For(hashCollector, new ArraySegment<byte>(data)); }
-
-        public static BurrowObject For(HashCollector hashCollector, ArraySegment<byte> data)
+        public static BurrowObject For(ObjectHeader hashCollector, ArraySegment<byte> data)
         {
             // Allocate memory
             var headerLength = hashCollector.ByteLength();
@@ -29,7 +25,7 @@ namespace SafeBox.Burrow.Serialization
             return new BurrowObject(new ArraySegment<byte>(bytes));
         }
 
-        public static BurrowObject For(HashCollector hashCollector, ByteChain data)
+        public static BurrowObject For(ObjectHeader hashCollector, ByteWriter data)
         {
             // Allocate memory
             var headerLength = hashCollector.ByteLength();
@@ -58,7 +54,7 @@ namespace SafeBox.Burrow.Serialization
 
         public bool IsValid() { return Data.Array != null; }
 
-        public Hash Hashes(int index)
+        public Hash HashAtIndex(int index)
         {
             if (index < 0 || index >= HashesCount) return null;
             return Burrow.Hash.From(Bytes.Array, Bytes.Offset + index * 32 + 4);
@@ -71,7 +67,8 @@ namespace SafeBox.Burrow.Serialization
             return hashes;
         }
 
-        public string Utf8Data() {
+        public string Utf8Data()
+        {
             try { return Encoding.UTF8.GetString(Data.Array, Data.Offset, Data.Count); }
             catch (Exception) { return null; }
         }

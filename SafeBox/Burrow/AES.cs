@@ -90,7 +90,7 @@ namespace SafeBox.Burrow
     {
         // *** Static ***
 
-        public static AesEncryptedObject For(HashCollector hashCollector, ByteChain byteChain)
+        public static AesEncryptedObject For(ObjectHeader hashCollector, ByteWriter byteChain)
         {
             // Prepare the data
             var dataLength = byteChain.ByteLength();

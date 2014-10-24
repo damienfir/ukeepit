@@ -27,17 +27,16 @@ namespace SafeBox.Burrow.Operations
 
             // Prepare the public information dictionary
             var publicInformation = new DictionaryConstructor();
-            foreach (var pair in identity.PublicInformation) publicInformation.Add(pair.Item1, pair.Item2);
+            foreach (var pair in identity.PublicInformation) publicInformation.Add(pair.Key, pair.Value);
             publicInformation.Add("registered date", registeredDate);
             publicInformation.Add("key", identity.PublicKey.Hash);
 
             // Add the public key
             publicKeyExpectedHash = identity.PublicKey.Hash;
-            objectStore.PutObject(BurrowObject.For(new HashCollector(), identity.PublicKeyBytes), identity, PublicKeyPutDone);
+            objectStore.PutObject(BurrowObject.For(new ObjectHeader(), identity.PublicKeyBytes), identity, PublicKeyPutDone);
 
             // Store the public information
-            var publicInformationHashes = new HashCollector();
-            var publicInformationObject = BurrowObject.For(publicInformationHashes, publicInformation.Serialize(publicInformationHashes));
+            var publicInformationObject = publicInformation.ToBurrowObject();
             publicInformationExpectedHash = publicInformationObject.Hash();
             objectStore.PutObject(publicInformationObject, identity, PublicInformationPutDone);
 
@@ -45,8 +44,7 @@ namespace SafeBox.Burrow.Operations
             var envelope = new DictionaryConstructor();
             envelope.Add("signature", identity.PrivateKey.Sign(publicInformationExpectedHash));
             envelope.Add("content", publicInformationExpectedHash);
-            var envelopeHashes = new HashCollector();
-            var envelopeObject = BurrowObject.For(envelopeHashes, envelope.Serialize(envelopeHashes));
+            var envelopeObject = envelope.ToBurrowObject();
             envelopeExpectedHash = envelopeObject.Hash();
             objectStore.PutObject(envelopeObject, identity, EnvelopePutDone);
 

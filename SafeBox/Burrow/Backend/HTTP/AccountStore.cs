@@ -9,6 +9,8 @@ namespace SafeBox.Burrow.Backend.HTTP
     {
         public static AccountStore ForUrl(string url) { return null; }
 
+        public AccountStore(string url) : base(url) { }
+
         public override void Accounts(Dictionary<string, string> query, AccountsResult handler)
         {
             throw new NotImplementedException();

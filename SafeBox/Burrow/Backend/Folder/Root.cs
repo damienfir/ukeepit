@@ -25,7 +25,7 @@ namespace SafeBox.Burrow.Backend.Folder
         
         void ListAsync(ListResult handler)
         {
-            var list = new List<ObjectUrl>();
+            var list = new ImmutableStack<ObjectUrl>();
             var identityHashHex = Account.IdentityHash.Hex();
 
             foreach (var file in Burrow.Static.DirectoryEnumerateFiles(Folder))
@@ -35,7 +35,7 @@ namespace SafeBox.Burrow.Backend.Folder
                 var hash = Hash.From(name.Substring(0, 64));
                 if (hash == null) continue;
                 var url = Burrow.Static.FileUtf8Text(file, null as string);
-                list.Add(new ObjectUrl(url, hash));
+                list = list.With(new ObjectUrl(url, hash));
             }
 
             Burrow.Static.SynchronizationContext.Post(new SendOrPostCallback(obj => handler(list)), null);

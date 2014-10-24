@@ -7,65 +7,47 @@ namespace SafeBox.Burrow.Serialization
 {
     public class DictionaryConstructor
     {
-        public readonly Dictionary<string, Hash> HashPairs = new Dictionary<string, Hash>();
-        private ByteChain byteChain = new ByteChain();
+        //public readonly Dictionary<string, Hash> HashPairs = new Dictionary<string, Hash>();
+        private ObjectHeader objectHeader = new ObjectHeader();
+        private ByteWriter byteWriter = new ByteWriter();
         private BigEndian bigEndian = new BigEndian();
 
-        public DictionaryConstructor() {
-            byteChain.Append(Dictionary.MimeType);
-        }
-
-        public ByteChain Serialize(HashCollector hashCollector)
+        public DictionaryConstructor()
         {
-            // Add hash pairs
-            foreach (var pair in HashPairs)
-            {
-                var index = hashCollector.Add(pair.Value);
-                Append(pair.Key);
-                Append(bigEndian.UInt(index));
-            }
-
-            // Return the chain, and give it up locally to avoid adding more stuff
-            var byteChainToReturn = byteChain;
-            byteChain = null;
-            return byteChainToReturn;
+            byteWriter.Append(Dictionary.MimeType);
         }
 
-        public BurrowObject ToBurrowObject()
-        {
-            var hashCollector = new HashCollector();
-            return BurrowObject.For(hashCollector, Serialize(hashCollector));
-        }
+        public BurrowObject ToBurrowObject() { return BurrowObject.For(objectHeader, byteWriter); }
 
         private void Append(string text) { Append(System.Text.Encoding.UTF8.GetBytes(text)); }
 
         private void Append(byte[] bytes)
         {
-            byteChain.Append(bigEndian.UInt16((ushort)bytes.Length));
-            byteChain.Append(bytes);
+            byteWriter.Append(bigEndian.UInt16((ushort)bytes.Length));
+            byteWriter.Append(bytes);
         }
 
         private void Append(ArraySegment<byte> bytes)
         {
-            byteChain.Append(bigEndian.UInt16((ushort)bytes.Count));
-            byteChain.Append(bytes);
+            byteWriter.Append(bigEndian.UInt16((ushort)bytes.Count));
+            byteWriter.Append(bytes);
         }
 
-        private void Append(ByteChain bytes)
+        private void Append(ByteWriter bytes)
         {
-            byteChain.Append(bigEndian.UInt16((ushort)bytes.ByteLength()));
-            byteChain.Append(bytes);
+            byteWriter.Append(bigEndian.UInt16((ushort)bytes.ByteLength()));
+            byteWriter.Append(bytes);
         }
 
-        public void Add(ArraySegment<byte> key, ByteChain value) { Append(key); Append(value); }
+        public void Add(ArraySegment<byte> key, ByteWriter value) { Append(key); Append(value); }
         public void Add(ArraySegment<byte> key, ArraySegment<byte> value) { Append(key); Append(value); }
         public void Add(ArraySegment<byte> key, byte[] value) { Append(key); Append(value); }
 
-        public void Add(byte[] key, ByteChain value) { Append(key); Append(value); }
+        public void Add(byte[] key, ByteWriter value) { Append(key); Append(value); }
         public void Add(byte[] key, ArraySegment<byte> value) { Append(key); Append(value); }
         public void Add(byte[] key, byte[] value) { Append(key); Append(value); }
 
-        public void Add(string key, ByteChain value) { Append(key); Append(value); }
+        public void Add(string key, ByteWriter value) { Append(key); Append(value); }
         public void Add(string key, ArraySegment<byte> value) { Append(key); Append(value); }
         public void Add(string key, byte[] value) { Append(key); Append(value); }
         public void Add(string key, string value) { Append(key); Append(value); }
@@ -81,6 +63,6 @@ namespace SafeBox.Burrow.Serialization
         public void Add(string key, long value) { Append(key); Append(bigEndian.Int64(value)); }
         public void Add(string key, float value) { Append(key); Append(BitConverter.GetBytes(value)); }
         public void Add(string key, double value) { Append(key); Append(BitConverter.GetBytes(value)); }
-        public void Add(string key, Hash value) { HashPairs[key] = value; }
+        public void Add(string key, Hash value) { Append(key); Append(bigEndian.UInt(objectHeader.Add(value))); }
     }
 }

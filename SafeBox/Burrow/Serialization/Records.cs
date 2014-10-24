@@ -43,7 +43,12 @@ namespace SafeBox.Burrow.Serialization
             return new ArraySegment<byte>(Bytes.Array, Bytes.Offset + offsets[index], offsets[index + 1] - offsets[index]);
         }
 
-        System.Collections.Generic.IEnumerator<ArraySegment<byte>> System.Collections.IEnumerable.GetEnumerator()
+        public System.Collections.Generic.IEnumerator<ArraySegment<byte>> GetEnumerator()
+        {
+            return new RecordsEnumerator(this);
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return new RecordsEnumerator(this);
         }
@@ -59,18 +64,19 @@ namespace SafeBox.Burrow.Serialization
             this.records = records;
         }
 
-        ArraySegment<byte> Current
-        {
-            get { return records.Record(position); }
-        }
+        public ArraySegment<byte> Current { get { return records.Record(position); } }
 
-        bool MoveNext()
+        public bool MoveNext()
         {
             if (position >= records.Count()) return false;
             position += 1;
             return true;
         }
 
-        void Reset() { position = -1; }
+        public void Reset() { position = -1; }
+
+        public void Dispose() { }
+
+        object System.Collections.IEnumerator.Current { get { return records.Record(position); } }
     }
 }
