@@ -13,17 +13,17 @@ namespace SafeBox.Burrow.Backend.HTTP
 
         public ObjectStore(string url) : base(url, 50) { }
 
-        public override void HasObject(Hash hash, HasObjectResult handler)
+        public override bool Has(Hash hash)
         {
             throw new NotImplementedException();
         }
 
-        public override void GetObject(Hash hash, GetObjectResult handler)
+        public override BurrowObject Get(Hash hash)
         {
             throw new NotImplementedException();
         }
 
-        public override void PutObject(BurrowObject serializedObject, PrivateIdentity identity, PutObjectResult handler)
+        public override Hash Put(BurrowObject serializedObject, PrivateIdentity identity)
         {
             throw new NotImplementedException();
         }

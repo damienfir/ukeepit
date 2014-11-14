@@ -103,7 +103,6 @@ namespace SafeBox.FolderSynchronization
 
     class SpaceSlice
     {
-        
         internal FileEntry[] Files= new FileEntry[32];
         internal int UsedFiles = 0;
         internal HashWithAesParameters CommitReference;
@@ -111,7 +110,7 @@ namespace SafeBox.FolderSynchronization
 
         public SpaceSlice()
         {
-
+            
         }
 
         internal bool BelongsHere(FileEntry file) { return Burrow.Static.Compare(file.Title, Files[0].Title) >= 0; }

@@ -10,35 +10,40 @@ namespace SafeBox.Burrow.Operations
 {
     public class AnnounceIdentity
     {
-        public delegate void Done(bool success);
-        private Done handler;
-        private PrivateIdentity identity;
-        private Backend.Root root;
+        public readonly TaskGroup.Future<bool> Future;
+        public readonly PrivateIdentity Identity;
+        public readonly AccountStore AccountStore;
 
-        public AnnounceIdentity(PrivateIdentity identity, ObjectStore objectStore, AccountStore accountStore, DateTime registeredDate, Done handler)
+        private Hash publicKeyExpectedHash;
+        private Hash publicInformationExpectedHash;
+        private Hash envelopeExpectedHash;
+        private readonly TaskGroup.Future<Hash> publicKeyPut;
+        private readonly TaskGroup.Future<Hash> publicInformationPut;
+        private readonly TaskGroup.Future<Hash> envelopePut;
+        private readonly TaskGroup.Future<IEnumerable<ObjectUrl>> identityRootList;
+
+        public AnnounceIdentity(PrivateIdentity identity, ObjectStore objectStore, AccountStore accountStore, DateTime registeredDate, TaskGroup taskGroup)
         {
-            this.identity = identity;
-            this.handler = handler;
-
-            // Create the account (if necessary)
-            var accountId = identity.PublicKey.Hash;
-            var account = accountStore.Account(accountId);
-            if (account == null) { if (handler != null) handler(false); return; }
+            this.Identity = identity;
+            this.Future = taskGroup.WaitForMe<bool>();
+            this.AccountStore = accountStore;
 
             // Prepare the public information dictionary
             var publicInformation = new DictionaryConstructor();
             foreach (var pair in identity.PublicInformation) publicInformation.Add(pair.Key, pair.Value);
-            publicInformation.Add("registered date", registeredDate);
+            publicInformation.Add("revision", registeredDate);
             publicInformation.Add("key", identity.PublicKey.Hash);
 
             // Add the public key
+            var toContinue = new TaskGroup();
             publicKeyExpectedHash = identity.PublicKey.Hash;
-            objectStore.PutObject(BurrowObject.For(new ObjectHeader(), identity.PublicKeyBytes), identity, PublicKeyPutDone);
+            publicKeyPut = toContinue.Run(() => objectStore.Put(BurrowObject.For(new ObjectHeader(), identity.PublicKeyBytes), identity));
+            publicKeyPut = objectStore.Put(BurrowObject.For(new ObjectHeader(), identity.PublicKeyBytes), identity, toContinue);
 
             // Store the public information
             var publicInformationObject = publicInformation.ToBurrowObject();
             publicInformationExpectedHash = publicInformationObject.Hash();
-            objectStore.PutObject(publicInformationObject, identity, PublicInformationPutDone);
+            publicInformationPut = toContinue.Run(() => objectStore.Put(publicInformationObject, identity));
 
             // Create an envelope with a signature
             var envelope = new DictionaryConstructor();
@@ -46,51 +51,32 @@ namespace SafeBox.Burrow.Operations
             envelope.Add("content", publicInformationExpectedHash);
             var envelopeObject = envelope.ToBurrowObject();
             envelopeExpectedHash = envelopeObject.Hash();
-            objectStore.PutObject(envelopeObject, identity, EnvelopePutDone);
+            envelopePut = toContinue.Run(() => objectStore.Put(envelopeObject, identity));
 
             // Get all existing hashes
-            root = account.Root("identity");
-            root.List(IdentityRootListDone);
+            identityRootList = toContinue.Run(() => accountStore.List(identity.PublicKey.Hash, "identity"));
+            toContinue.WhenDone(Continue);
         }
-
-        private bool publicKeyPutDone = false;
-        private Hash publicKeyHash = null;
-        private Hash publicKeyExpectedHash = null;
-        private void PublicKeyPutDone(Hash hash) { publicKeyPutDone = true; publicKeyHash = hash; Continue(); }
-
-        private bool publicInformationPutDone = false;
-        private Hash publicInformationHash = null;
-        private Hash publicInformationExpectedHash = null;
-        private void PublicInformationPutDone(Hash hash) { publicInformationPutDone = true; publicInformationHash = hash; Continue(); }
-
-        private bool envelopePutDone = false;
-        private Hash envelopeHash = null;
-        private Hash envelopeExpectedHash = null;
-        private void EnvelopePutDone(Hash hash) { envelopePutDone = true; envelopeHash = hash; Continue(); }
-
-        private bool identityRootListDone = false;
-        private IEnumerable<ObjectUrl> identityRootList = null;
-        private void IdentityRootListDone(IEnumerable<ObjectUrl> list) { identityRootListDone = true; identityRootList = list; Continue(); }
-
+        
         private void Continue()
         {
-            // Check if some operations are still pending
-            if (!publicKeyPutDone || !publicInformationPutDone || !envelopePutDone || !identityRootListDone) return;
-
             // Check if all hashes match
-            if (!publicKeyExpectedHash.Equals(publicKeyHash) || !publicInformationExpectedHash.Equals(publicInformationHash) || !envelopeExpectedHash.Equals(envelopeHash))
+            if (!publicKeyExpectedHash.Equals(publicKeyPut.Result) || !publicInformationExpectedHash.Equals(publicInformationPut.Result) || !envelopeExpectedHash.Equals(envelopePut.Result))
             {
-                if (handler != null) handler(false);
+                Future.Done(false);
                 return;
             }
 
             // Post the new root
-            var removeList = identityRootList.Select(item => item.Hash);
+            var removeList = identityRootList.Result.Select(item => item.Hash);
             var addList = new List<ObjectUrl>();
-            addList.Add(new ObjectUrl(envelopeHash));
-            root.Post(addList, removeList, identity, RootPostDone);
+            addList.Add(new ObjectUrl(envelopeExpectedHash));
+
+            Asynchronous.Run(() => AccountStore.Modify(Identity.PublicKey.Hash, "identity", addList, removeList, Identity), Finish);
         }
 
-        private void RootPostDone(bool success) { if (handler != null) handler(success); }
+        private void Finish(bool success) {
+            Future.Done(true);
+        }
     }
 }

@@ -7,8 +7,9 @@ using SafeBox.Burrow.Serialization;
 
 namespace SafeBox.Burrow.Operations
 {
-    public class GetFromAnyStore
+    public class GetFromAnyStoreOld
     {
+        /*
         public delegate void Done(BurrowObject obj, ObjectStore source);
 
         private readonly Done handler;
@@ -58,6 +59,6 @@ namespace SafeBox.Burrow.Operations
                 objectStores.Head.GetObject(hash, GetDone);
                 return;
             }
-        }
+        } */
     }
 }

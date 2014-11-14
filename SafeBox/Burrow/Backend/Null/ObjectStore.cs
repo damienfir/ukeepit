@@ -11,8 +11,8 @@ namespace SafeBox.Burrow.Backend.Null
     {
         public ObjectStore(string url) : base(url, 100) { }
 
-        public override void HasObject(Hash hash, HasObjectResult handler) { handler(false); }
-        public override void GetObject(Hash hash, GetObjectResult handler) { handler(null); }
-        public override void PutObject(BurrowObject serializedObject, PrivateIdentity identity, PutObjectResult handler) { handler(null); }
+        public override bool Has(Hash hash) { return false; }
+        public override BurrowObject Get(Hash hash) { return null; }
+        public override Hash Put(BurrowObject serializedObject, PrivateIdentity identity) { return null; }
     }
 }

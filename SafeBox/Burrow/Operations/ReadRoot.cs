@@ -10,43 +10,35 @@ namespace SafeBox.Burrow.Operations
     public class ReadRoot
     {
         public delegate bool Merge(Burrow.Serialization.Dictionary dictionary);
-        public delegate void Done(ImmutableStack<Hash> mergedHashes);
 
         public readonly Burrow.Configuration.PrivateIdentity Identity;
-        public readonly ImmutableStack<ObjectStore> ObjectStores;
+        public readonly ObjectStore ObjectStore;
         public readonly Merge MergeHandler;
-        public readonly Done DoneHandler;
-        private int expected = 0;
+        public readonly TaskGroup.Future<ImmutableStack<Hash>> Future;
         private ImmutableStack<Hash> MergedHashes = new ImmutableStack<Hash>();
 
-        public ReadRoot(Hash hash, string rootLabel, ImmutableStack<AccountStore> accountStores, ImmutableStack<ObjectStore> objectStores, Burrow.Configuration.PrivateIdentity identity, Merge mergeHandler, Done doneHandler)
+        public ReadRoot(Hash hash, string rootLabel, AccountStore accountStore, ObjectStore objectStore, Burrow.Configuration.PrivateIdentity identity, Merge mergeHandler, TaskGroup taskGroup)
         {
-            this.ObjectStores = objectStores;
+            this.ObjectStore = objectStore;
             this.Identity = identity;
             this.MergeHandler = mergeHandler;
-            this.DoneHandler = doneHandler;
+            this.Future = taskGroup.WaitForMe<ImmutableStack<Hash>>();
 
-            expected = 1;
-            foreach (var accountStore in accountStores) accountStore.Account(hash).Root(rootLabel).List(Process);
-            Done(null);
+            Asynchronous.Run(() => accountStore.List(hash, rootLabel), Process);
         }
 
         private void Process(IEnumerable<ObjectUrl> objectUrls)
         {
             if (objectUrls == null) return;
+            var taskGroup = new TaskGroup();
             foreach (var objectUrl in objectUrls)
-            {
-                expected += 1;
-                new ReadRootObjectUrl(this, objectUrl);
-            }
+                new ReadRootObjectUrl(this, objectUrl, taskGroup);
+            taskGroup.WhenDone(Finish);
         }
-
-        internal void Done(Hash hash)
+        
+        internal void Finish()
         {
-            expected -= 1;
-            if (hash != null) MergedHashes = MergedHashes.With(hash);
-            if (expected > 0) return;
-            DoneHandler(MergedHashes);
+            Future.Done(MergedHashes);
         }
     }
 
@@ -54,16 +46,32 @@ namespace SafeBox.Burrow.Operations
     {
         public readonly ReadRoot ReadRoot;
         public readonly ObjectUrl ObjectUrl;
+        private TaskGroup.Future<Hash> Future;
         private HashWithAesParameters Reference = null;
 
-        public ReadRootObjectUrl(ReadRoot readRoot, ObjectUrl objectUrl)
+        public ReadRootObjectUrl(ReadRoot readRoot, ObjectUrl objectUrl, TaskGroup taskGroup)
         {
             this.ReadRoot = readRoot;
             this.ObjectUrl = objectUrl;
+            this.Future = taskGroup.WaitForMe<Hash>();
 
-            var stores = ReadRoot.ObjectStores;
-            if (objectUrl.Url != null) stores = stores.With(Burrow.Static.ObjectStoreForUrl(objectUrl.Url, objectUrl.Url));
+            if (objectUrl.Url == null)
+            {
+                var store = Burrow.Static.ObjectStoreForUrl(objectUrl.Url, objectUrl.Url);
+                Asynchronous.Run(()=> store.Get(objectUrl.Hash), GetFromMainStore);
+            }
+            else
+            {
+            }
+            var stores = ReadRoot.ObjectStore;
+            if (objectUrl.Url != null) stores = stores.With();
+            taskGroup = new TaskGroup();
             new Burrow.Operations.GetFromAnyStore(objectUrl.Hash, stores, OpenEnvelope);
+        }
+
+        private void GetFromMainStore(BurrowObject obj)
+        {
+            if (obj == null)
         }
 
         private void OpenEnvelope(BurrowObject obj, ObjectStore source)
@@ -71,7 +79,7 @@ namespace SafeBox.Burrow.Operations
             if (obj == null) { ReadRoot.Done(null); return; }
             Reference = Burrow.Static.OpenEnvelope(obj, ReadRoot.Identity, new ImmutableStack<Burrow.PublicIdentity>());
             if (Reference == null) { ReadRoot.Done(null); return; }
-            new GetFromAnyStore(Reference.Hash, ReadRoot.ObjectStores.With(source), DecryptObject);
+            new GetFromAnyStore(Reference.Hash, ReadRoot.ObjectStore.With(source), DecryptObject);
         }
 
         private void DecryptObject(BurrowObject obj, ObjectStore source)

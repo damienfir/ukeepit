@@ -27,50 +27,34 @@ namespace SafeBox.Burrow.Backend.Folder
             this.Folder = folder;
         }
 
-        public override void HasObject(Hash hash, HasObjectResult handler)
-        {
-            ThreadPool.QueueUserWorkItem(new WaitCallback(dummy => HasObjectAsync(hash, handler)));
-        }
-
-        void HasObjectAsync(Hash hash, HasObjectResult handler)
+        bool Has(Hash hash)
         {
             var hashHex = hash.Hex();
             var file = Folder + "\\" + hashHex.Substring(0, 2) + "\\" + hashHex.Substring(2);
-            var result = File.Exists(file);
-            Burrow.Static.SynchronizationContext.Post(new SendOrPostCallback(obj => handler(result)), null);
+            return File.Exists(file);
         }
 
-        public override void GetObject(Hash hash, GetObjectResult handler)
-        {
-            ThreadPool.QueueUserWorkItem(new WaitCallback(dummy => GetObjectAsync(hash, handler)));
-        }
-
-        void GetObjectAsync(Hash hash, GetObjectResult handler)
+        BurrowObject Get(Hash hash)
         {
             var hashHex = hash.Hex();
             var file = Folder + "\\" + hashHex.Substring(0, 2) + "\\" + hashHex.Substring(2);
-            handler(BurrowObject.From(Burrow.Static.FileBytes(file, null)));
+            return BurrowObject.From(Burrow.Static.FileBytes(file, null));
         }
 
-        public override void PutObject(BurrowObject obj, PrivateIdentity identity, PutObjectResult handler)
-        {
-            ThreadPool.QueueUserWorkItem(new WaitCallback(dummy => PutObjectAsync(obj, identity, handler)));
-        }
-
-        void PutObjectAsync(BurrowObject obj, PrivateIdentity identity, PutObjectResult handler)
+        Hash Put(BurrowObject obj, PrivateIdentity identity)
         {
             // Check if that object exists already
             var hash = obj.Hash();
             var hashHex = hash.Hex();
             var folder = Folder + "\\" + hashHex.Substring(0, 2);
             var file = folder + "\\" + hashHex.Substring(2);
-            if (File.Exists(file)) { handler(hash); return; }
+            if (File.Exists(file)) return hash; 
 
             // Write the file, and move it to the right place
             if (!Directory.Exists(folder)) Burrow.Static.DirectoryCreate(folder, LogLevel.Warning);
             var temporaryFile = folder + "\\." + Burrow.Static.RandomHex(16);
-            if (Burrow.Static.WriteFile(temporaryFile, obj.Bytes) && Burrow.Static.FileMove(temporaryFile, file, LogLevel.Warning) && File.Exists(file)) { handler(hash); return; }
-            handler(null);
+            if (Burrow.Static.WriteFile(temporaryFile, obj.Bytes) && Burrow.Static.FileMove(temporaryFile, file, LogLevel.Warning) && File.Exists(file)) return hash;
+            return null;
         }
     }
 }
