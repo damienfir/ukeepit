@@ -10,42 +10,42 @@ namespace SafeBox.Burrow.Operations
     public class GetPublicIdentity
     {
         public delegate void Done(PublicIdentity publicIdentity);
-        private readonly Done handler;
         internal readonly Cache cache;
-        internal readonly ImmutableStack<ObjectStore> ObjectStores;
-        internal readonly ImmutableStack<AccountStore> AccountStores;
+        internal readonly ObjectStore ObjectStore;
+        internal readonly AccountStore AccountStore;
         internal readonly Hash Hash;
-        internal PublicKey PublicKey;
+        internal GetPublicKey GetPublicKey;
+        public readonly TaskGroup.Future<PublicIdentity> Future;
 
-        public GetPublicIdentity(Hash hash, Cache cache, ImmutableStack<AccountStore> accountStores, ImmutableStack<ObjectStore> objectStores, bool forceReload, Done handler)
+        public GetPublicIdentity(Hash hash, Cache cache, AccountStore accountStore, ObjectStore objectStore, bool forceReload, TaskGroup taskGroup)
         {
-            this.AccountStores = accountStores;
-            this.ObjectStores = objectStores;
+            this.Future = taskGroup.WaitForMe<PublicIdentity>();
+            this.AccountStore = accountStore;
+            this.ObjectStore = objectStore;
             this.cache = cache;
             this.Hash = hash;
-            this.handler = handler;
 
             // Load from cache
             if (!forceReload)
             {
                 var publicIdentity = null as PublicIdentity;
-                if (cache.PublicIdentitiesByHash.TryGetValue(hash, out publicIdentity)) { handler(publicIdentity); return; }
+                if (cache.PublicIdentitiesByHash.TryGetValue(hash, out publicIdentity)) { Future.Done(publicIdentity); return; }
             }
 
             // Retrieve the main public key
-            if (objectStores.Length == 0) { handler(null); return; }
-            new GetPublicKey(hash, cache, objectStores, GetPublicKeyDone);
+            var tg = new TaskGroup();
+            GetPublicKey = new GetPublicKey(hash, cache, objectStore, tg);
+            tg.WhenDone(GetPublicKeyDone);
         }
 
-        private void GetPublicKeyDone(PublicKey publicKey)
+        private void GetPublicKeyDone()
         {
-            if (publicKey == null) { handler(null); return; }
-            this.PublicKey = publicKey;
+            if (GetPublicKey.Future.Result == null) { Future.Done(null); return; }
 
             // Retrieve the account identity from all stores
-            expectedAccounts = AccountStores.Length;
+            AccountStore.
             foreach (var store in AccountStores)
-                new GetPublicIdentityFromAccount(this, store.Account(Hash));
+                new GetPublicIdentityFromAccount(this, Hash);
         }
 
         private long NewestPublicInformationDate = long.MinValue;
@@ -101,15 +101,15 @@ namespace SafeBox.Burrow.Operations
     internal class GetPublicIdentityFromAccount
     {
         internal readonly GetPublicIdentity GetPublicIdentity;
-        internal readonly Account Account;
+        internal readonly Hash IdentityHash;
 
-        public GetPublicIdentityFromAccount(GetPublicIdentity getPublicIdentity, Account account)
+        public GetPublicIdentityFromAccount(GetPublicIdentity getPublicIdentity, Hash identityHash)
         {
             this.GetPublicIdentity = getPublicIdentity;
-            this.Account = account;
+            this.IdentityHash = identityHash;
 
             // List the identity root
-            account.Root("identity").List(IdentityRootListDone);
+            Asynchronous.Run(() => GetPublicIdentity.AccountStore.List(identityHash, "identity"), IdentityRootListDone);
         }
 
         private int expected = 0;
@@ -174,14 +174,12 @@ namespace SafeBox.Burrow.Operations
 
     public class AccountIdentity
     {
-        public readonly Account Account;
         public readonly Dictionary PublicInformation;
         public readonly Hash Hash;
         public readonly DateTime RegisteredDate;
 
-        public AccountIdentity(Account account, Hash hash, Dictionary publicInformation, DateTime registeredDate)
+        public AccountIdentity(Hash hash, Dictionary publicInformation, DateTime registeredDate)
         {
-            this.Account = account;
             this.Hash = hash;
             this.PublicInformation = publicInformation;
             this.RegisteredDate = registeredDate;

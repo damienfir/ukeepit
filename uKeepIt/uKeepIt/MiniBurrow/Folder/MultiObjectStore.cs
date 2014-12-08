@@ -3,49 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SafeBox.Burrow.Backend.Any
+namespace uKeepIt.MiniBurrow.Folder
 {
-    class ObjectStore : Backend.ObjectStore
+    public class MultiObjectStore 
     {
-        public static Backend.ObjectStore For(ObjectUrl objectUrl, Backend.ObjectStore mainStore)
-        {
-            // If no URL is indicated, the object URL points to an object in the main store
-            if (objectUrl.Url == null) return mainStore;
-
-            // If we cannot access the store (usually because the protocol is not supported), give up immediately
-            var store = Burrow.Static.ObjectStoreForUrl(objectUrl.Url, objectUrl.Url);
-            if (store == null) return null;
-
-            // Create a store encompassing the two stores
-            var stores = new Backend.ObjectStore[2];
-            stores[0] = store;
-            stores[1] = mainStore;
-            var url = "Any(\n" + stores[0].Url + "\n" + stores[1].Url + "\n)\n";
-            return new ObjectStore(url, stores[0].Priority, stores);
-        }
-
-        public static ObjectStore For(IEnumerable<Backend.ObjectStore> objectStores)
+        public static MultiObjectStore For(IEnumerable<ObjectStore> objectStores)
         {
             if (objectStores == null) return null;
-
             var stores = objectStores.ToArray();
             if (stores.Length == 0) return null;
-            Array.Sort(stores);
-
-            var url = "Any(\n";
-            var minPriority = 100;
-            foreach (var store in stores)
-            {
-                url += store.Url + "\n";
-                minPriority = Math.Min(minPriority, store.Priority);
-            }
-            url += ")\n";
-
-            return new ObjectStore(url, minPriority, stores);
+            return new MultiObjectStore(stores);
         }
 
         // The (immutable) list of stores.
-        private Backend.ObjectStore[] stores;
+        private ObjectStore[] stores;
 
         // This keeps state in a lenient way - it's no problem if different threads see a different version of this value.
         // Assuming that int assignment is atomic, we do not need to synchronize this any further.
@@ -55,8 +26,7 @@ namespace SafeBox.Burrow.Backend.Any
         // Assuming that int assignment is atomic, we do not need to synchronize this any further.
         private int lastWritten = -1;
 
-        public ObjectStore(string url, int priority, Backend.ObjectStore[] stores)
-            : base(url, priority)
+        public MultiObjectStore(ObjectStore[] stores)
         {
             this.stores = stores;
         }
@@ -89,14 +59,14 @@ namespace SafeBox.Burrow.Backend.Any
             return null;
         }
 
-        public override Hash Put(Serialization.BurrowObject serializedObject, Configuration.PrivateIdentity identity)
+        public override Hash Put(Serialization.BurrowObject serializedObject)
         {
             var last = lastWritten;   // Make a local copy, since another thread might change that value
             for (var i = 0; i < stores.Length; i++)
             {
                 last += 1;
                 if (last >= stores.Length) last = 0;
-                var hash = stores[last].Put(serializedObject, identity);
+                var hash = stores[last].Put(serializedObject);
                 if (hash != null) { 
                     lastWritten = last; // This may conflict with other threads, but is not a problem here. Statistically, we are still spreading the data over all available stores.
                     return hash; 
