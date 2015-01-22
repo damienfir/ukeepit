@@ -3,11 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="uKeepIt Configuration" Height="351" Width="525">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="218*"/>
+            <ColumnDefinition Width="299*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*" />
             <RowDefinition Height="60" />
         </Grid.RowDefinitions>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.ColumnSpan="2">
             <StackPanel>
                 <Label Content="Master password"  Padding="0" Margin="30,30,30,0" FontWeight="Bold" />
                 <TextBlock Text="You have a master password set." Padding="0" Margin="30,5" TextWrapping="Wrap" />
@@ -22,9 +26,9 @@
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
-        <Rectangle Grid.Row="1" Fill="#eeeeee" />
-        <Rectangle Grid.Row="1" Fill="#999999" Height="1" VerticalAlignment="Top" />
-        <Button Content="Done" Grid.Row="1" Height="30" HorizontalAlignment="Right" Margin="30,0,30,0" VerticalAlignment="Center" Width="100" Click="closeButton_Click" />
-        <TextBlock Margin="30,0,136,15" Padding="0" Text="Changes are applied automatically." TextWrapping="Wrap" Grid.Row="1" Foreground="#FF999999" Height="16" VerticalAlignment="Bottom" />
+        <Rectangle Grid.Row="1" Fill="#eeeeee" Grid.ColumnSpan="2" />
+        <Rectangle Grid.Row="1" Fill="#999999" Height="1" VerticalAlignment="Top" Grid.ColumnSpan="2" />
+        <Button Content="Done" Grid.Row="1" Height="30" HorizontalAlignment="Right" Margin="0,15,30,15" VerticalAlignment="Center" Width="100" Click="closeButton_Click" Grid.Column="1" />
+        <TextBlock Margin="30,0,136,15" Padding="0" Text="Changes are applied automatically." TextWrapping="Wrap" Grid.Row="1" Foreground="#FF999999" Height="16" VerticalAlignment="Bottom" Grid.ColumnSpan="2" />
     </Grid>
 </Window>

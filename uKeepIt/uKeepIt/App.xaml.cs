@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Windows;
@@ -13,6 +12,15 @@ namespace uKeepIt
     public partial class App : Application
     {
         // Configuration
-        public readonly static Configuration ConfigurationEditor = new Configuration();
+        public readonly static Configuration Configuration = new Configuration();
+
+        private NotificationMenu notification;
+        private FolderWatcher watcher;
+
+        private void main(object sender, StartupEventArgs e)
+        {
+            notification = new NotificationMenu(this);
+            watcher = new FolderWatcher();
+        }
     }
 }

@@ -1,2 +1,4 @@
 ukeep.it/**/*.html
 .*-update
+/uKeepIt/uKeepIt/bin/Debug
+/uKeepIt/uKeepIt/obj/x86/Debug

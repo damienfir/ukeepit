@@ -31,7 +31,7 @@ namespace uKeepIt.MiniBurrow.Folder
             this.stores = stores;
         }
 
-        public override bool Has(Hash hash)
+        public bool Has(Hash hash)
         {
             var best = bestToRead;   // Make a local copy, since another thread might change that value
 
@@ -42,7 +42,7 @@ namespace uKeepIt.MiniBurrow.Folder
             return false;
         }
 
-        public override Serialization.BurrowObject Get(Hash hash)
+        public Serialization.BurrowObject Get(Hash hash)
         {
             var best = bestToRead;   // Make a local copy, since another thread might change that value
 
@@ -59,7 +59,7 @@ namespace uKeepIt.MiniBurrow.Folder
             return null;
         }
 
-        public override Hash Put(Serialization.BurrowObject serializedObject)
+        public Hash Put(Serialization.BurrowObject serializedObject)
         {
             var last = lastWritten;   // Make a local copy, since another thread might change that value
             for (var i = 0; i < stores.Length; i++)

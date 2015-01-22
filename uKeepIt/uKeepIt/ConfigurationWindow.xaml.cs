@@ -91,7 +91,7 @@ namespace uKeepIt
 
             // Add this store to the configuration file
             var configuration = App.Configuration.ReadConfiguration();
-            var section = configuration.Section("store "+ Burrow.Static.RandomHex(8));
+            var section = configuration.Section("store "+ MiniBurrow.Static.RandomHex(8));
             section.Set("url", folder);
             section.Set("permanent", true);
             App.Configuration.WriteConfiguration(configuration);
