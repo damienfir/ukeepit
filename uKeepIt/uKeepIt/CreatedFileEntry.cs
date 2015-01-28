@@ -24,5 +24,14 @@ namespace uKeepIt
             this.ContentId = contentId;
             this.Chunks = chunks;
         }
+
+        public CreatedFileEntry(string path, DateTime lastWriteTime, long size, Hash contentId)
+        {
+            this.Path = path;
+            this.LastWriteTime = lastWriteTime;
+            this.Length = size;
+            this.ContentId = contentId;
+            this.Chunks = new ImmutableStack<ObjectReference>();
+        }
     }
 }

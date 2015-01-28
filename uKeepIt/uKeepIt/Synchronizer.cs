@@ -39,6 +39,8 @@ namespace uKeepIt
 
             // Delete files not in use any more
             DeleteNotInUse();
+
+            SpaceEditor.SaveIfChanged();
         }
 
         private void DeleteNotInUse()
@@ -71,13 +73,13 @@ namespace uKeepIt
                 folderEntry.InUse = true;
 
             // Add all files that the user created or modified
-            foreach (var filename in MiniBurrow.Static.DirectoryEnumerateFiles(folder))
-                ProcessFile(folder + "\\" + filename);
+            foreach (var filename in MiniBurrow.Static.DirectoryEnumerateFiles(CheckoutFolder + "\\" + folder))
+                ProcessFile(filename);
 
             // Traverse all subfolders
-            foreach (var subFolder in MiniBurrow.Static.DirectoryEnumerateDirectories(folder))
+            foreach (var subFolder in MiniBurrow.Static.DirectoryEnumerateDirectories(CheckoutFolder + "\\" + folder))
             {
-                if (!Traverse(folder + "/" + subFolder)) return false;
+                if (!Traverse(subFolder)) return false;
             }
 
             return true;
@@ -85,20 +87,20 @@ namespace uKeepIt
 
         public bool ProcessFile(string path)
         {
-            var file = CheckoutFolder + "\\" + path;
-            var fileInfo = new FileInfo(file);
+            var file = path.Replace(CheckoutFolder, "");
+            var fileInfo = new FileInfo(path);
 
             // Get or calculate the content ID
-            var contentId = SpaceEditor.KnownContentId(path, (ulong)fileInfo.Length, fileInfo.LastWriteTimeUtc.Ticks);
+            var contentId = SpaceEditor.KnownContentId(file, (ulong)fileInfo.Length, fileInfo.LastWriteTimeUtc.Ticks);
             if (contentId == null)
             {
-                var stream = File.OpenRead(file);
+                var stream = File.OpenRead(path);
                 contentId = Hash.From(SpaceEditor.sha256.ComputeHash(stream));
                 stream.Close();
             }
 
             // Check if we know about this file
-            var fileEntry = SpaceEditor.FileEntryById(path, contentId);
+            var fileEntry = SpaceEditor.FileEntryById(file, contentId);
             if (fileEntry == null)
             {
                 // This is a new file: reuse the content of a known file, or upload the new content
@@ -108,13 +110,13 @@ namespace uKeepIt
                 if (sameFileEntry != null)
                 {
                     // An entry with the same content exists (e.g. after file rename), reuse that   
-                    SpaceEditor.Merge(new FileEntry(path, contentId, Now, false, (ulong)fileInfo.Length, fileInfo.LastWriteTimeUtc.Ticks, sameFileEntry.Chunks));
+                    SpaceEditor.Merge(new FileEntry(file, contentId, Now, false, (ulong)fileInfo.Length, fileInfo.LastWriteTimeUtc.Ticks, sameFileEntry.Chunks));
                     return true;
                 }
 
                 // Upload the chunks
                 var chunks = new ImmutableStack<ObjectReference>();
-                var bytes = MiniBurrow.Static.FileBytes(file);
+                var bytes = MiniBurrow.Static.FileBytes(path);
                 var offset = 0;
                 var targetChunkSize = Math.Min(8 * 1024 * 1024, bytes.Length / 4);
                 while (offset < bytes.Length)
@@ -130,12 +132,16 @@ namespace uKeepIt
                     // Add this block
                     var encryptedObject = EncryptedObject.For(new ArraySegment<byte>(bytes, offset, chunkSize));
                     var hash = MultiObjectStore.Put(encryptedObject.Object);
-                    if (hash == null) return false;
+                    if (hash == null)
+                    {
+                        return false;
+                    }
                     chunks = chunks.With(new ObjectReference(hash, encryptedObject.Key, encryptedObject.Nonce));
+                    offset += chunkSize;
                 }
 
                 // Create the entry
-                SpaceEditor.Merge(new FileEntry(path, contentId, Now, false, (ulong)fileInfo.Length, fileInfo.LastWriteTimeUtc.Ticks, chunks.Reversed()));
+                SpaceEditor.Merge(new FileEntry(file, contentId, Now, false, (ulong)fileInfo.Length, fileInfo.LastWriteTimeUtc.Ticks, chunks.Reversed()));
                 return true;
             }
             else
@@ -147,7 +153,7 @@ namespace uKeepIt
                 {
                     if (fileEntry.LastWriteTime > fileInfo.LastWriteTimeUtc.Ticks)
                     {
-                        File.Delete(file);
+                        File.Delete(path);
                         return true;
                     }
                     else
@@ -181,7 +187,7 @@ namespace uKeepIt
                 // This is a new file: check it out
 
                 // Conflict resolution: keep both versions
-                if (File.Exists(CheckoutFolder + "\\" + entry.Path))
+                if (File.Exists(CheckoutFolder + @"\" + entry.Path))
                 {
                     // Delete this entry
                     entry.Deleted = true;

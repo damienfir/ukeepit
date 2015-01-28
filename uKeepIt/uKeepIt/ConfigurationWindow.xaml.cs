@@ -24,7 +24,7 @@ namespace uKeepIt
         public ConfigurationWindow()
         {
             InitializeComponent();
-            App.Configuration.Reloaded += BurrowConfiguration_Reloaded;
+            //App.Configuration.Reloaded += BurrowConfiguration_Reloaded;
             BurrowConfiguration_Reloaded(null, null);
         }
 
@@ -55,7 +55,7 @@ namespace uKeepIt
             var item = btn.Tag as string;
             // TODO: here, we should just mark the store for removal, and then copy all objects and our accounts to a remaining permanent store
             //Static.FileDelete(item.StoreFile, LogLevel.Warning);
-            App.Configuration.Reload();
+            //App.Configuration.Reload();
         }
 
         private void Window_Drop(object sender, DragEventArgs e)
@@ -90,14 +90,14 @@ namespace uKeepIt
             MiniBurrow.Static.DirectoryCreate(folder + "\\accounts");
 
             // Add this store to the configuration file
-            var configuration = App.Configuration.ReadConfiguration();
-            var section = configuration.Section("store "+ MiniBurrow.Static.RandomHex(8));
-            section.Set("url", folder);
-            section.Set("permanent", true);
-            App.Configuration.WriteConfiguration(configuration);
+            //var configuration = App.Configuration.ReadConfiguration();
+            //var section = configuration.Section("store "+ MiniBurrow.Static.RandomHex(8));
+            //section.Set("url", folder);
+            //section.Set("permanent", true);
+            //App.Configuration.WriteConfiguration(configuration);
 
-            // Reload the configuration
-            App.Configuration.Reload();
+            //// Reload the configuration
+            //App.Configuration.Reload();
         }
 
         private string BurrowStoreFolder(string folder)
@@ -121,29 +121,29 @@ namespace uKeepIt
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            App.Configuration.Reloaded -= BurrowConfiguration_Reloaded;
+            //App.Configuration.Reloaded -= BurrowConfiguration_Reloaded;
         }
 
         void BurrowConfiguration_Reloaded(object sender, EventArgs e)
         {
             // Update the list
             stores.Children.Clear();
-            var configuration = App.Configuration.ReadConfiguration();
-            foreach (var pairs in configuration.SectionsByName)
-            {
-                if (! pairs.Key.StartsWith("store ")) continue;
-                var grid = new Grid();
-                grid.Tag = pairs.Key;
-                grid.Margin = new Thickness(0, 10, 0, 10);
-                stores.Children.Add(grid);
-                //var icon = new Image();
-                //icon.Source = ;
-                var label = new Label();
-                var url = pairs.Value.Get("url");
-                label.Content = url;
-                label.Foreground = url.StartsWith("http://") || url.StartsWith("https://") || Directory.Exists(url) ? Brushes.Black : Brushes.Red;
-                grid.Children.Add(label);
-            }
+            //var configuration = App.Configuration.ReadConfiguration();
+            //foreach (var pairs in configuration.SectionsByName)
+            //{
+            //    if (! pairs.Key.StartsWith("store ")) continue;
+            //    var grid = new Grid();
+            //    grid.Tag = pairs.Key;
+            //    grid.Margin = new Thickness(0, 10, 0, 10);
+            //    stores.Children.Add(grid);
+            //    //var icon = new Image();
+            //    //icon.Source = ;
+            //    var label = new Label();
+            //    var url = pairs.Value.Get("url");
+            //    label.Content = url;
+            //    label.Foreground = url.StartsWith("http://") || url.StartsWith("https://") || Directory.Exists(url) ? Brushes.Black : Brushes.Red;
+            //    grid.Children.Add(label);
+            //}
         }
     }
 }

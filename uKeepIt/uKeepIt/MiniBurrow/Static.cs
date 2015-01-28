@@ -12,10 +12,11 @@ namespace uKeepIt.MiniBurrow
 {
     public static class Static
     {
+
         // For simplicity, the following variables are allocated statically (global variables).
         // While an application may work with multiple configurations (unlikely, but thinkable), it makes sense that they all share these objects.
+        public static System.Threading.SynchronizationContext SynchronizationContext = new System.Threading.SynchronizationContext();
         public static readonly Log Log = new Log();
-        public static System.Threading.SynchronizationContext SynchronizationContext;
         public static Random Random = new Random();
 
         public static string RandomHex(int length)
@@ -312,7 +313,8 @@ namespace uKeepIt.MiniBurrow
 
         // Empty byte sequences
         public static readonly byte[] EmptyByteArray = new byte[0];
+        public static byte[] NullByteArray = {0x00};
         public static readonly ArraySegment<byte> EmptyByteSegment = new ArraySegment<byte>(EmptyByteArray, 0, 0);
-        public static readonly ArraySegment<byte> NullByteSegment = new ArraySegment<byte>(null, 0, 0);
+        public static readonly ArraySegment<byte> NullByteSegment = new ArraySegment<byte>(NullByteArray, 0, 0);
     }
 }

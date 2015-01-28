@@ -43,7 +43,7 @@ namespace uKeepIt.MiniBurrow.Serialization
                 // Key and value
                 var pair = new DictionaryPair(new ArraySegment<byte>(bytes.Array, pos + 2, keyLength), new ArraySegment<byte>(bytes.Array, pos + 2 + keyLength + 2, valueLength), obj);
                 pairs = pairs.With(pair);
-                pos += pos + 2 + keyLength + 2 + valueLength;
+                pos += 2 + keyLength + 2 + valueLength;
             }
 
             return new Dictionary(pairs);

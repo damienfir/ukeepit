@@ -57,13 +57,13 @@ namespace uKeepIt.MiniBurrow.Serialization
         public Hash HashAtIndex(int index)
         {
             if (index < 0 || index >= HashesCount) return null;
-            return Burrow.Hash.From(Bytes.Array, Bytes.Offset + index * 32 + 4);
+            return MiniBurrow.Hash.From(Bytes.Array, Bytes.Offset + index * 32 + 4);
         }
 
         public Hash[] Hashes()
         {
             var hashes = new Hash[HashesCount];
-            for (var i = 0; i < HashesCount; i++) hashes[i] = Burrow.Hash.From(Bytes.Array, Bytes.Offset + i * 32 + 4);
+            for (var i = 0; i < HashesCount; i++) hashes[i] = MiniBurrow.Hash.From(Bytes.Array, Bytes.Offset + i * 32 + 4);
             return hashes;
         }
 
@@ -78,7 +78,7 @@ namespace uKeepIt.MiniBurrow.Serialization
             if (CachedHash != null) return CachedHash;
             var sha256 = new System.Security.Cryptography.SHA256Managed();
             var hashBytes = sha256.ComputeHash(Bytes.Array, Bytes.Offset, Bytes.Count);
-            CachedHash = Burrow.Hash.From(hashBytes);
+            CachedHash = MiniBurrow.Hash.From(hashBytes);
             return CachedHash;
         }
     }

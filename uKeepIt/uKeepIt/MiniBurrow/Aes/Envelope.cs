@@ -20,6 +20,7 @@ namespace uKeepIt.MiniBurrow.Aes
 
             // Derive a unique mask
             var maskIv = MiniBurrow.Static.RandomBytes(32);
+            envelope.Add("mask iv", maskIv);
             var mask = Static.KDF(key, maskIv, 1);
             var verificationMask = Static.KDF(key, maskIv, 2);
             envelope.Add("verification mask", verificationMask);
@@ -37,7 +38,7 @@ namespace uKeepIt.MiniBurrow.Aes
             var bytes = new ByteWriter();
             bytes.Append("rsa encrypted aes key for ");
             bytes.Append(hash.Bytes());
-            return bytes.ToBytes();
+            return bytes.ToByteArray();
         }
 
         public static ObjectReference Open(BurrowObject obj, ArraySegment<byte> key)

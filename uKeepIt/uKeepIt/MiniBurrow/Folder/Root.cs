@@ -57,14 +57,14 @@ namespace uKeepIt.MiniBurrow.Folder
                 if (!File.Exists(file)) return false;
                 hexHashesToRemove.Remove(hashHex);
             }
-
+            
             // Remove (and ignore all errors)
             if (hexHashesToRemove.Count > 0)
                 foreach (var file in MiniBurrow.Static.DirectoryEnumerateFiles(Folder))
                 {
                     var name = Path.GetFileName(file);
                     if (name.Length < 64) continue;
-                    if (hexHashesToRemove.Contains(name.Substring(0, 64))) Burrow.Static.FileDelete(file, LogLevel.Warning);
+                    if (hexHashesToRemove.Contains(name.Substring(0, 64))) MiniBurrow.Static.FileDelete(file, LogLevel.Warning);
                 }
 
             return true;

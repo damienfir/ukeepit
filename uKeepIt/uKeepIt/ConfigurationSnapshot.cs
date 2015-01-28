@@ -5,6 +5,7 @@ using System.Text;
 using uKeepIt.MiniBurrow.Folder;
 using uKeepIt.MiniBurrow.Serialization;
 using uKeepIt.MiniBurrow;
+using System.IO;
 
 namespace uKeepIt
 {
@@ -14,6 +15,7 @@ namespace uKeepIt
         public readonly string Folder;
         public readonly MultiObjectStore MultiObjectStore;
         public readonly Store[] Stores;
+        public IniFile iniFile;
 
         public ConfigurationSnapshot(string folder)
         {
@@ -22,10 +24,11 @@ namespace uKeepIt
             // Load the configuration
             var stores = new ImmutableStack<Store>();
             var objectStores = new ImmutableStack<ObjectStore>();
-            var iniFile = IniFile.From(MiniBurrow.Static.FileBytes(Folder + "\\configuration"));
+
+            iniFile = IniFile.From(MiniBurrow.Static.FileBytes(Folder + @"\configuration"));
             foreach (var sectionPair in iniFile.SectionsByName)
             {
-                if (sectionPair.Key.Substring(0, 6) != "store ") continue;
+                if (sectionPair.Key.Length < 5 || sectionPair.Key.Substring(0, 5) != "store") continue;
                 var storeFolder = sectionPair.Value.Get("folder");
                 stores=stores.With( new Store(storeFolder));
                 objectStores = objectStores.With(new ObjectStore(storeFolder));
@@ -47,7 +50,7 @@ namespace uKeepIt
             return spaceNames;
         }
 
-        Space Space(string name)
+        public Space Space(string name)
         {
             return new Space(this, name);
         }

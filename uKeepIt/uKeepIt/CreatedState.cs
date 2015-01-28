@@ -54,7 +54,7 @@ namespace uKeepIt
             // Serialize
             string text = "";
             foreach (var file in FilesByPath)
-                text += "file\t" + file.Value.ContentId.Hex() + "\t" + file.Value.Length + "\t" + file.Value.LastModificationDate.Ticks + "\t" + file.Value.Path + "\n";
+                text += "file\t" + file.Value.ContentId.Hex() + "\t" + file.Value.Length + "\t" + file.Value.LastWriteTime.Ticks + "\t" + file.Value.Path + "\n";
             foreach (var folder in FoldersByPath)
                 text += "folder\t" + folder.Value.Path + "\n";
 

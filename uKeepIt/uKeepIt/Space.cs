@@ -17,6 +17,7 @@ namespace uKeepIt
         public Space(ConfigurationSnapshot configuration, string name)
         {
             this.Name = name;
+            this.Configuration = configuration;
 
             var roots = new ImmutableStack<Root>();
             foreach (var store in configuration.Stores)
@@ -26,7 +27,7 @@ namespace uKeepIt
 
         public SpaceEditor CreateEditor(ArraySegment<byte> key)
         {
-            return new SpaceEditor(Configuration, Roots, Key);
+            return new SpaceEditor(Configuration, Roots, key);
         }
 
     }

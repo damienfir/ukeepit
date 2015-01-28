@@ -19,6 +19,7 @@ namespace uKeepIt
             this.app = app;
 
             menu = new ContextMenuStrip();
+            
             menu.Items.Add(new ToolStripButton("Configuration", null, onConfiguration));
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(new ToolStripButton("Quit", null, onQuit));

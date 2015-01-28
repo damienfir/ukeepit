@@ -24,12 +24,12 @@ namespace uKeepIt.MiniBurrow.Folder
             this.stores = stores;
         }
 
-        public IEnumerable<Root> ListSpaces()
-        {
-            var roots = new ImmutableStack<Root>();
-            foreach (string subFolder in MiniBurrow.Static.DirectoryEnumerateDirectories(Folder + "\\spaces"))
-                roots = roots.With(new Root(Folder + "\\spaces\\" + subFolder));
-            return roots;
-        }
+        //public IEnumerable<Root> ListSpaces()
+        //{
+            //var roots = new ImmutableStack<Root>();
+            //foreach (string subFolder in MiniBurrow.Static.DirectoryEnumerateDirectories(Folder + "\\spaces"))
+            //    roots = roots.With(new Root(Folder + "\\spaces\\" + subFolder));
+            //return roots;
+        //}
     }
 }

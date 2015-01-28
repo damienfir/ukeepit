@@ -18,7 +18,7 @@ namespace uKeepIt.MiniBurrow.Serialization
             return index;
         }
 
-        public int ByteLength() { return 4 + hashes.Count; }
+        public int ByteLength() { return 4 + hashes.Count * 32; }
 
         public void WriteToByteArray(byte[] bytes, int offset)
         {

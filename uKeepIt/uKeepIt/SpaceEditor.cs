@@ -101,6 +101,7 @@ namespace uKeepIt
         {
             var list = new ImmutableStack<FileEntry>();
             FilesByPath.TryGetValue(path, out list);
+            if (list == null) return null;
             foreach (var entry in list)
                 if (contentId.Equals( entry.ContentId)) return entry;
             return null;
@@ -111,6 +112,7 @@ namespace uKeepIt
         {
             var list = new ImmutableStack<FileEntry>();
             FilesByPath.TryGetValue(path, out list);
+            if (list == null) return null;
             foreach (var entry in list)
                 if (entry.Length == length && entry.LastWriteTime == lastWriteTime) return entry.ContentId;
             return null;
@@ -166,7 +168,7 @@ namespace uKeepIt
             foreach (var entry in FoldersByPath)
                 dictionary.Add("folder", entry.Value.Serialize(dictionary.ObjectHeader));
 
-            // Submit
+            // Submit the dictionary
             var encryptedObject = MiniBurrow.Aes.EncryptedObject.For(dictionary.ObjectHeader, dictionary.ByteWriter);
             var hash = Configuration.MultiObjectStore.Put(encryptedObject.Object);
             if (hash == null) return false;
