@@ -99,8 +99,7 @@ namespace uKeepIt
 
         internal FileEntry FileEntryById(string path, Hash contentId)
         {
-            var list = new ImmutableStack<FileEntry>();
-            FilesByPath.TryGetValue(path, out list);
+            var list = FileEntriesByPath(path);
             if (list == null) return null;
             foreach (var entry in list)
                 if (contentId.Equals( entry.ContentId)) return entry;
@@ -110,8 +109,7 @@ namespace uKeepIt
         // For efficiency, we assume that a file with the same name, lastWriteTime and length has the same contentId
         internal Hash KnownContentId(string path, ulong length, long lastWriteTime)
         {
-            var list = new ImmutableStack<FileEntry>();
-            FilesByPath.TryGetValue(path, out list);
+            var list = FileEntriesByPath(path);
             if (list == null) return null;
             foreach (var entry in list)
                 if (entry.Length == length && entry.LastWriteTime == lastWriteTime) return entry.ContentId;
@@ -132,15 +130,20 @@ namespace uKeepIt
             if (existingEntry != null && existingEntry.Revision >= entry.Revision) return;
 
             // Add (or replace)
-            FilesByContentId.Add(entry.ContentId, entry);
+            //FilesByContentId.Add(entry.ContentId, entry);
+            // --> cannot do that, because two files with the same content but different names have to stay separate
 
             var list = null as ImmutableStack<FileEntry>;
             FilesByPath.TryGetValue(entry.Path, out list);
             if (list!=null) {
                 if (existingEntry!=null) list=list.ReversedWithout(existingEntry);
-                list=list.With(entry);
+                list.With(entry);
             }
-            FilesByPath.Add(entry.Path, list);
+            else
+            {
+                list = new ImmutableStack<FileEntry>(entry);
+                FilesByPath.Add(entry.Path, list);
+            }
         }
 
         public void Merge(FolderEntry entry)
@@ -163,8 +166,9 @@ namespace uKeepIt
             dictionary.Add("title", Title);
             dictionary.Add("creation date", CreationDate);
             dictionary.Add("revision", Revision);
-            foreach (var entry in FilesByContentId)
-                dictionary.Add("file", entry.Value.Serialize(dictionary.ObjectHeader));
+            foreach (var list in FilesByPath)
+                foreach (var entry in list.Value)
+                    dictionary.Add("file", entry.Serialize(dictionary.ObjectHeader));
             foreach (var entry in FoldersByPath)
                 dictionary.Add("folder", entry.Value.Serialize(dictionary.ObjectHeader));
 
@@ -186,6 +190,11 @@ namespace uKeepIt
 
             hasChanges = false;
             return true;
+        }
+
+        public void UpdateRevision(ulong new_revision)
+        {
+            Revision = new_revision;
         }
     }
 }

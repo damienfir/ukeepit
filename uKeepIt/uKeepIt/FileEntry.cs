@@ -50,8 +50,8 @@ namespace uKeepIt
         public readonly ImmutableStack<ObjectReference> Chunks;
 
         // These are temporary flags used by the Synchronizer, and not saved
-        public bool Processed = false;
-        public bool InUse = false;
+        //public bool Processed = false;
+        public bool InUse = true;
 
         public FileEntry(string path, Hash contentId, ulong revision, bool deleted, ulong length, long lastWriteTime, ImmutableStack<ObjectReference> chunks)
         {
@@ -68,6 +68,7 @@ namespace uKeepIt
         {
             var bigEndian= new BigEndian();
             var byteWriter= new ByteWriter();
+            byteWriter.Append(bigEndian.UInt16((ushort)System.Text.Encoding.UTF8.GetBytes(Path).Length));
             byteWriter.Append(Path);
             byteWriter.Append(ContentId.Bytes());
             byteWriter.Append(bigEndian.UInt64(Revision));

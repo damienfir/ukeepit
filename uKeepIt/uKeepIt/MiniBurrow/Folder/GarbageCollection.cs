@@ -22,7 +22,7 @@ namespace uKeepIt.MiniBurrow.Folder
         private bool run()
         {
             // Don't delete files that are younger than 24 hours (to keep partially written or synchronized trees)
-            var graceTime = DateTime.UtcNow.AddHours(-24);
+            var graceTime = DateTime.UtcNow; //.AddHours(-24);
 
             // Traverse all objects linked from any root
             HashSet<Hash> set = new HashSet<Hash>();

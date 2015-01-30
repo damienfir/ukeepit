@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Windows;
+using uKeepIt.MiniBurrow;
+using uKeepIt.MiniBurrow.Folder;
 
 namespace uKeepIt
 {
@@ -33,6 +35,10 @@ namespace uKeepIt
             ArraySegment<byte> key = new ArraySegment<byte>(keybytes);
 
             new Synchronizer(syncFolder.Space.CreateEditor(key), syncFolder.Folder, config.MultiObjectStore);
+
+            new GarbageCollection(new ImmutableStack<Store>(config.Stores), config.MultiObjectStore.AsStack());
+
+            Environment.Exit(0);
         }
     }
 }

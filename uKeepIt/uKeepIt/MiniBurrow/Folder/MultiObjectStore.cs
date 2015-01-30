@@ -75,5 +75,10 @@ namespace uKeepIt.MiniBurrow.Folder
 
             return null;
         }
+
+        public ImmutableStack<ObjectStore> AsStack()
+        {
+            return ImmutableStack.With(stores);
+        }
     }
 }
