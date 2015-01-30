@@ -18,7 +18,11 @@ namespace uKeepIt.MiniBurrow.Folder
 
         public IEnumerable<string> ListSpaces()
         {
-            return MiniBurrow.Static.DirectoryEnumerateDirectories(Folder + "\\spaces");
+            var list = new List<string>();
+            foreach (var name in MiniBurrow.Static.DirectoryEnumerateDirectories(Folder + "\\spaces"))
+                list.Add(name.Replace(Folder + "\\spaces\\", ""));
+
+            return list;
         }
 
         public Root SpaceRoot(string name)

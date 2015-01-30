@@ -17,28 +17,23 @@ namespace uKeepIt
         //public readonly static Configuration Configuration = new Configuration();
 
         //private NotificationMenu notification;
-        //private FolderWatcher watcher;
 
         private void main(object sender, StartupEventArgs e)
         {
             //notification = new NotificationMenu(this);
-            //watcher = new FolderWatcher();
 
             ConfigurationSnapshot config = new ConfigurationSnapshot(@"C:\Users\damien\Documents\ukeepit\test\config");
 
-            string folder = @"C:\Users\damien\Documents\ukeepit\test\local\confidential";
-            SynchronizedFolder syncFolder = new SynchronizedFolder(config.Space("confidential"), folder, new SynchronizedFolderState(folder));
+            var folders = new List<SynchronizedFolder>();
+            foreach (var space_name in config.Spaces())
+            {
+                string folder = @"C:\Users\damien\Documents\ukeepit\test\local\" + space_name;
+                folders.Add(new SynchronizedFolder(config.Space("confidential"), folder, new SynchronizedFolderState(folder), config));
+            }
 
-            byte[] keybytes = new byte[32];
-            for (int i = 0; i < keybytes.Length; i++) keybytes[i] = 0x01;
+            //new GarbageCollection(new ImmutableStack<Store>(config.Stores), config.MultiObjectStore.AsStack());
 
-            ArraySegment<byte> key = new ArraySegment<byte>(keybytes);
-
-            new Synchronizer(syncFolder.Space.CreateEditor(key), syncFolder.Folder, config.MultiObjectStore);
-
-            new GarbageCollection(new ImmutableStack<Store>(config.Stores), config.MultiObjectStore.AsStack());
-
-            Environment.Exit(0);
+            //Environment.Exit(0);
         }
     }
 }

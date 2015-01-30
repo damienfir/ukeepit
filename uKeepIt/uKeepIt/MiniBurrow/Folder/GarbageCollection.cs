@@ -44,12 +44,13 @@ namespace uKeepIt.MiniBurrow.Folder
 
         public bool traverse(Hash hash, HashSet<Hash> set)
         {
+            set.Add(hash);
             var hashes = getHashes(hash);
             if (hashes == null) return false;
             foreach (var child in hashes)
             {
                 if (set.Contains(child)) continue;
-                set.Add(child);
+                //set.Add(child);
                 if (!traverse(child, set)) return false;
             }
             return true;
@@ -69,19 +70,25 @@ namespace uKeepIt.MiniBurrow.Folder
         {
             var allOK = true;
 
-            foreach (var objectStore in objectStores)
+            foreach (var objectStore in objectStores) {
                 foreach (var folder in MiniBurrow.Static.DirectoryEnumerateDirectories(objectStore.Folder))
-                    foreach (var filename in MiniBurrow.Static.DirectoryEnumerateFiles(objectStore.Folder + "\\" + folder))
+                {
+                    foreach (var file in MiniBurrow.Static.DirectoryEnumerateFiles(folder))
                     {
-                        var hash = Hash.From(folder + filename);
+                        var hash = Hash.From(file.Replace(objectStore.Folder + "\\", "").Replace("\\", ""));
                         if (hash == null) continue;
                         if (keep.Contains(hash)) continue;
-                        var file = objectStore.Folder + "\\" + folder + "\\" + filename;
                         var fileInfo = new FileInfo(file);
                         if (fileInfo == null) continue;
                         if (fileInfo.LastWriteTimeUtc.CompareTo(graceTime) > 0) continue;
                         allOK &= MiniBurrow.Static.FileDelete(file);
                     }
+
+                    // delete directory if empty
+                    if (!MiniBurrow.Static.DirectoryEnumerateFiles(folder).Any())
+                        allOK &= MiniBurrow.Static.DirectoryDelete(folder);
+                }
+            }
 
             return allOK;
         }

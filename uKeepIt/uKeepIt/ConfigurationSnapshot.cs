@@ -16,6 +16,7 @@ namespace uKeepIt
         public readonly MultiObjectStore MultiObjectStore;
         public readonly Store[] Stores;
         public IniFile iniFile;
+        public byte[] key;
 
         public ConfigurationSnapshot(string folder)
         {
@@ -37,9 +38,13 @@ namespace uKeepIt
             // Create the main object
             Stores = stores.ToArray();
             MultiObjectStore = MultiObjectStore.For(objectStores);
+
+            byte[] keybytes = new byte[32];
+            for (int i = 0; i < keybytes.Length; i++) keybytes[i] = 0x01;
+            key = keybytes;
         }
 
-        IEnumerable<string> Spaces()
+        public IEnumerable<string> Spaces()
         {
             var spaceNames = new HashSet<string>();
             foreach (var store in Stores)
