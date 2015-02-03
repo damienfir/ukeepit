@@ -12,7 +12,7 @@ namespace uKeepIt
 {
     public class SpaceEditor
     {
-        public readonly ConfigurationSnapshot Configuration;
+        public readonly MultiObjectStore multiObjectStore;
         public readonly ImmutableStack<Root> Roots;
         public readonly ArraySegment<byte> Key;
         public readonly Dictionary<Hash, FileEntry> FilesByContentId = new Dictionary<Hash, FileEntry>();
@@ -26,11 +26,14 @@ namespace uKeepIt
         private ulong Revision=0;
         private bool hasChanges = false;
 
-        public SpaceEditor(ConfigurationSnapshot configuration, ImmutableStack<Root> roots, ArraySegment<byte> key)
+        public SpaceEditor(MultiObjectStore multiObjectStore, List<Store> stores, ArraySegment<byte> key)
         {
-            this.Configuration  = configuration;
-            this.Roots=roots;
+            this.multiObjectStore = multiObjectStore;
             this.Key= key;
+
+            var roots = new ImmutableStack<Root>();
+            foreach (var store in stores)
+                roots = roots.With(store.SpaceRoot(name));
 
             // Fully read the space
             foreach (var root in Roots)
@@ -38,10 +41,10 @@ namespace uKeepIt
             {
                 if (MergedHashesByHexId.ContainsKey(objectUrl.Hash.Hex())) continue;
 
-                var envelopeObject= Configuration.MultiObjectStore.Get(objectUrl.Hash);
+                var envelopeObject= multiObjectStore.Get(objectUrl.Hash);
                 var reference = MiniBurrow.Aes.Envelope.Open(envelopeObject, Key);
 
-                var obj = Configuration.MultiObjectStore.Get(reference.Hash);
+                var obj = multiObjectStore.Get(reference.Hash);
                 MiniBurrow.Aes.Static.Process(obj.Data, reference.Key, reference.Nonce);
                 if (Merge(obj)) MergedHashesByHexId.Add(objectUrl.Hash.Hex(), objectUrl.Hash);
             }
@@ -174,12 +177,12 @@ namespace uKeepIt
 
             // Submit the dictionary
             var encryptedObject = MiniBurrow.Aes.EncryptedObject.For(dictionary.ObjectHeader, dictionary.ByteWriter);
-            var hash = Configuration.MultiObjectStore.Put(encryptedObject.Object);
+            var hash = multiObjectStore.Put(encryptedObject.Object);
             if (hash == null) return false;
 
             // Submit the envelope
             var envelope = MiniBurrow.Aes.Envelope.Create(new ObjectReference(hash, encryptedObject.Key, encryptedObject.Nonce), Key);
-            var envelopeHash = Configuration.MultiObjectStore.Put(envelope);
+            var envelopeHash = multiObjectStore.Put(envelope);
             if (envelopeHash==null) return false;
 
             // Update all roots

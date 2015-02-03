@@ -3,27 +3,31 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using uKeepIt.MiniBurrow.Folder;
 
 namespace uKeepIt
 {
     class SynchronizedFolder
     {
+        public readonly Context context;
         public readonly Space Space;
         public readonly string Folder;
+        public readonly ArraySegment<byte> key;
+
         public readonly SynchronizedFolderState CreatedState;
         public FileSystemWatcher watcher;
-        public readonly ConfigurationSnapshot config;
         private bool changed = false;
         private bool syncing = false;
         private int n = 0;
 
-        public SynchronizedFolder(Space space, string folder, SynchronizedFolderState createdState, ConfigurationSnapshot config)
+        public SynchronizedFolder(Context context, Space space, string folder, ArraySegment<byte> key)
         {
+            this.context = context;
             this.Space = space;
             this.Folder = folder;
-            this.CreatedState = createdState;
-            this.config = config;
+            this.key = key;
 
+            this.CreatedState = new SynchronizedFolderState(folder);
             this.watcher = WatchDirectory(folder);
         }
 
@@ -35,9 +39,13 @@ namespace uKeepIt
             watcher.Created += new FileSystemEventHandler(onCreated);
             watcher.Deleted += new FileSystemEventHandler(onDeleted);
             watcher.Renamed += new RenamedEventHandler(onRenamed);
-            watcher.EnableRaisingEvents = true;
 
             return watcher;
+        }
+
+        private void watch()
+        {
+            watcher.EnableRaisingEvents = true;
         }
 
         private void onRenamed(object sender, RenamedEventArgs e)
@@ -80,7 +88,7 @@ namespace uKeepIt
             changed = false;
 
             Console.WriteLine("launching synchronizer for {0}", Folder);
-            new Synchronizer(Space.CreateEditor(new ArraySegment<byte>(config.key)), Folder, config.MultiObjectStore);
+            new Synchronizer(Space.CreateEditor(key), Folder, context.multiobjectstore);
             Console.WriteLine("synchronizer finished for {0}", Folder);
             syncing = false;
 
@@ -88,4 +96,4 @@ namespace uKeepIt
             launchSynchronizer();
         }
     }
-}
+} 

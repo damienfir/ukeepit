@@ -18,27 +18,38 @@ namespace uKeepIt
 
         //private NotificationMenu notification;
 
+        Configuration config;
+
         private void main(object sender, StartupEventArgs e)
         {
             //notification = new NotificationMenu(this);
 
-            ConfigurationSnapshot config = new ConfigurationSnapshot(@"C:\Users\damien\Documents\ukeepit\test\config");
+            config = new Configuration();
+            
 
+            //new GarbageCollection(new ImmutableStack<Store>(config.Stores), config.MultiObjectStore.AsStack());
+
+            //Environment.Exit(0);
+        }
+
+        private List<SynchronizedFolder> addFolders()
+        {
             var folders = new List<SynchronizedFolder>();
             foreach (var space_name in config.Spaces())
             {
                 string folder = @"C:\Users\damien\Documents\ukeepit\test\local\" + space_name;
                 folders.Add(new SynchronizedFolder(config.Space("confidential"), folder, new SynchronizedFolderState(folder), config));
             }
+            return folders;
+        }
 
+        private void syncAllFolders(List<SynchronizedFolder> folders)
+        {
             foreach (var folder in folders)
             {
                 folder.syncFolder();
             }
-
-            new GarbageCollection(new ImmutableStack<Store>(config.Stores), config.MultiObjectStore.AsStack());
-
-            //Environment.Exit(0);
         }
+
     }
 }

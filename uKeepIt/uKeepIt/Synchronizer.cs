@@ -16,6 +16,7 @@ namespace uKeepIt
         public readonly SpaceEditor SpaceEditor;
         public readonly string CheckoutFolder;
         public readonly MultiObjectStore MultiObjectStore;
+
         public readonly ulong Now;
         public readonly string _revision_file_name;
         public readonly ulong _previous_revision;

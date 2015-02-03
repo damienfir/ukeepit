@@ -13,36 +13,33 @@ namespace uKeepIt
     public class ConfigurationSnapshot
     {
         public readonly string Folder;
-        public readonly MultiObjectStore MultiObjectStore;
-        public readonly Store[] Stores;
+        public MultiObjectStore MultiObjectStore;
+        public Store[] Stores;
         public IniFile iniFile;
-        public byte[] key;
+        public ArraySegment<byte> key;
+        public List<SynchronizedFolder> synced_folders;
+
+        private readonly string _store_section = "store";
+        private readonly string _space_section = "space";
+        private readonly string _key_section = "key";
+        private readonly string _path_key = "path";
+        private readonly string _default_folder = "";
 
         public ConfigurationSnapshot(string folder)
         {
-            this.Folder=folder;
+            this.Folder = folder;
 
             // Load the configuration
-            var stores = new ImmutableStack<Store>();
-            var objectStores = new ImmutableStack<ObjectStore>();
-
             iniFile = IniFile.From(MiniBurrow.Static.FileBytes(Folder + @"\configuration"));
-            foreach (var sectionPair in iniFile.SectionsByName)
-            {
-                if (sectionPair.Key.Length < 5 || sectionPair.Key.Substring(0, 5) != "store") continue;
-                var storeFolder = sectionPair.Value.Get("folder");
-                stores=stores.With( new Store(storeFolder));
-                objectStores = objectStores.With(new ObjectStore(storeFolder));
-            }
             
-            // Create the main object
-            Stores = stores.ToArray();
-            MultiObjectStore = MultiObjectStore.For(objectStores);
-
-            byte[] keybytes = new byte[32];
-            for (int i = 0; i < keybytes.Length; i++) keybytes[i] = 0x01;
-            key = keybytes;
+            var stores = getStores();
+            var spaces = getSpaces();
+            setupMultiObjectStore(stores);
+            setupSpaces(stores, spaces);
+            getKey();
         }
+
+        
 
         public IEnumerable<string> Spaces()
         {
@@ -53,11 +50,6 @@ namespace uKeepIt
                 foreach (var item in list) spaceNames.Add(item);
             }
             return spaceNames;
-        }
-
-        public Space Space(string name)
-        {
-            return new Space(this, name);
         }
     }
 }
