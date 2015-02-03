@@ -31,7 +31,12 @@ namespace uKeepIt
                 folders.Add(new SynchronizedFolder(config.Space("confidential"), folder, new SynchronizedFolderState(folder), config));
             }
 
-            //new GarbageCollection(new ImmutableStack<Store>(config.Stores), config.MultiObjectStore.AsStack());
+            foreach (var folder in folders)
+            {
+                folder.syncFolder();
+            }
+
+            new GarbageCollection(new ImmutableStack<Store>(config.Stores), config.MultiObjectStore.AsStack());
 
             //Environment.Exit(0);
         }

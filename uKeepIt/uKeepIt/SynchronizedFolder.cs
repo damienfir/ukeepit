@@ -13,7 +13,9 @@ namespace uKeepIt
         public readonly SynchronizedFolderState CreatedState;
         public FileSystemWatcher watcher;
         public readonly ConfigurationSnapshot config;
+        private bool changed = false;
         private bool syncing = false;
+        private int n = 0;
 
         public SynchronizedFolder(Space space, string folder, SynchronizedFolderState createdState, ConfigurationSnapshot config)
         {
@@ -40,33 +42,50 @@ namespace uKeepIt
 
         private void onRenamed(object sender, RenamedEventArgs e)
         {
-            launchSynchronizer();
+            syncFolder();
         }
 
         private void onDeleted(object sender, FileSystemEventArgs e)
         {
-            launchSynchronizer();
+            syncFolder();
         }
 
         private void onCreated(object sender, FileSystemEventArgs e)
         {
-            launchSynchronizer();
+            syncFolder();
         }
 
         private void onChanged(object sender, FileSystemEventArgs e)
         {
+            if (e.Name.Equals(".ukeepit"))
+            {
+                Console.WriteLine("detected a change in .ukeepit");
+                return;
+            }
+            syncFolder();
+        }
+
+        public void syncFolder()
+        {
+            changed = true;
             launchSynchronizer();
         }
 
         private void launchSynchronizer()
         {
-            if (!syncing)
-            {
-                Console.WriteLine("launching synchronizer for {0}", Folder);
-                syncing = true;
-                new Synchronizer(Space.CreateEditor(new ArraySegment<byte>(config.key)), Folder, config.MultiObjectStore);
-                syncing = false;
-            }
+            // discards while running or if no changes left
+            if (!changed || syncing) return;
+
+            syncing = true;
+            changed = false;
+
+            Console.WriteLine("launching synchronizer for {0}", Folder);
+            new Synchronizer(Space.CreateEditor(new ArraySegment<byte>(config.key)), Folder, config.MultiObjectStore);
+            Console.WriteLine("synchronizer finished for {0}", Folder);
+            syncing = false;
+
+            // run again if a change has been made while Synchronizer was running
+            launchSynchronizer();
         }
     }
 }
