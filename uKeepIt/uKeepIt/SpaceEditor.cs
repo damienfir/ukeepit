@@ -26,17 +26,14 @@ namespace uKeepIt
         private ulong Revision=0;
         private bool hasChanges = false;
 
-        public SpaceEditor(MultiObjectStore multiObjectStore, List<Store> stores, ArraySegment<byte> key)
+        public SpaceEditor(MultiObjectStore multiObjectStore, ImmutableStack<Root> roots, ArraySegment<byte> key)
         {
             this.multiObjectStore = multiObjectStore;
             this.Key= key;
-
-            var roots = new ImmutableStack<Root>();
-            foreach (var store in stores)
-                roots = roots.With(store.SpaceRoot(name));
+            this.Roots = roots;
 
             // Fully read the space
-            foreach (var root in Roots)
+            foreach (var root in roots)
             foreach (var objectUrl in root.List())
             {
                 if (MergedHashesByHexId.ContainsKey(objectUrl.Hash.Hex())) continue;

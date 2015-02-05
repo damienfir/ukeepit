@@ -60,6 +60,7 @@
     <Compile Include="CheckInFolder.xaml.cs">
       <DependentUpon>CheckInFolder.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Context.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="CreatedFileEntry.cs" />
     <Compile Include="CreatedFolderEntry.cs" />
@@ -76,7 +77,6 @@
     <Compile Include="MiniBurrow\Aes\Envelope.cs" />
     <Compile Include="MiniBurrow\Aes\ObjectReference.cs" />
     <Compile Include="MiniBurrow\Aes\Static.cs" />
-    <Compile Include="ConfigurationSnapshot.cs" />
     <Compile Include="MiniBurrow\Folder\GarbageCollection.cs" />
     <Compile Include="MiniBurrow\Folder\Root.cs" />
     <Compile Include="MiniBurrow\Folder\ObjectStore.cs" />

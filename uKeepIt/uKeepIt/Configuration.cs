@@ -10,12 +10,12 @@ namespace uKeepIt
 {
     public class Configuration
     {
-        public readonly string Location;
+        public readonly string _location;
 
-        public Context context;
-        public Store[] Stores;
-        public ArraySegment<byte> key;
-        public List<SynchronizedFolder> synced_folders;
+        private Context _context;
+        private byte[] _key;
+        private Dictionary<string, Store> _stores;
+        private Dictionary<string, Space> _spaces;
 
         private readonly string _store_section = "store";
         private readonly string _space_section = "space";
@@ -25,62 +25,77 @@ namespace uKeepIt
 
         public Configuration(Context context)
         {
+            _context = context;
             //var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             //Folder = appDataFolder + "\\ukeepit";
-            Location = @"C:\Users\damien\Documents\ukeepit\test\config";
-            
+            _location = @"C:\Users\damien\Documents\ukeepit\test\config\configuration";
+
+            _stores = new Dictionary<string, Store>();
+            _spaces = new Dictionary<string, Space>();
+
+            readConfig();
+            reloadContext();
         }
 
-        public void addStore(string name, string location) { }
+        public void addStore(string name, string location)
+        {
+            _stores.Add(name, new Store(location));
+        }
+
         public void removeStore(string name) { }
 
-        public void addSpace(string name, string location) { }
+        public void addSpace(string name, string location)
+        {
+            _spaces.Add(name, new Space(name, location));
+        }
+
         public void removeSpace(string name) { }
 
         public void readConfig()
         {
-            IniFile config = IniFile.From(MiniBurrow.Static.FileBytes(Location));
-
-            var stores = new List<Store>();
-            var spaces = new List<Tuple<string, string>>();
+            IniFile config = IniFile.From(MiniBurrow.Static.FileBytes(_location));
 
             foreach (var sectionPair in config.SectionsByName)
             {
                 if (sectionPair.Key.StartsWith(_store_section))
                 {
+                    var storeName = sectionPair.Key.Substring(_store_section.Length + 1);
                     var storeFolder = sectionPair.Value.Get(_path_key);
-                    stores.Add(new Store(storeFolder));
+                    addStore(storeName, storeFolder);
                 }
                 else if (sectionPair.Key.StartsWith(_space_section))
                 {
                     var spaceName = sectionPair.Key.Substring(_space_section.Length + 1);
                     var spaceFolder = sectionPair.Value.Get(_path_key, _default_folder);
-                    spaces.Add(Tuple.Create(spaceName, spaceFolder));
+                    addSpace(spaceName, spaceFolder);
                 }
             }
 
-            foreach (var store in stores)
+            foreach (var store in _stores)
             {
-                foreach (var checkedin in store.ListSpaces())
+                foreach (var checkedin in store.Value.ListSpaces())
                 {
-                    if (spaces.Find(x => x.Item1.Equals(checkedin)) != null) continue;
-                    spaces.Add(Tuple.Create(checkedin, _default_folder));
+                    if (_spaces.ContainsKey(checkedin)) continue;
+                    addSpace(checkedin, _default_folder);
                 }
             }
 
-            byte[] keybytes = new byte[32];
-            for (int i = 0; i < keybytes.Length; i++) keybytes[i] = 0x01;
-            key = new ArraySegment<byte>(keybytes);
+            _key = new byte[32];
+            for (int i = 0; i < _key.Length; i++) _key[i] = 0x01;
+        }
 
-            context.reloadStores(stores);
-            context.reloadSpaces(stores, spaces);
+        public void reloadContext()
+        {
+            _context.reloadKey(_key);
+            _context.reloadObjectStore(_stores);
+            _context.reloadSpaces(_spaces);
         }
 
         public void writeConfig()
         {
             IniFile config = new IniFile();
 
-            
+            // write
         }
     }
 }

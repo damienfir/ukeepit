@@ -7,45 +7,43 @@ using uKeepIt.MiniBurrow.Folder;
 
 namespace uKeepIt
 {
-    class SynchronizedFolder
+    public class SynchronizedFolder
     {
         public readonly Context context;
-        public readonly Space Space;
-        public readonly string Folder;
-        public readonly ArraySegment<byte> key;
+        public readonly Space space;
 
-        public readonly SynchronizedFolderState CreatedState;
-        public FileSystemWatcher watcher;
-        private bool changed = false;
-        private bool syncing = false;
-        private int n = 0;
+        //public readonly SynchronizedFolderState CreatedState;
+        private FileSystemWatcher _watcher;
+        private bool _changed = false;
+        private bool _syncing = false;
 
-        public SynchronizedFolder(Context context, Space space, string folder, ArraySegment<byte> key)
+        public SynchronizedFolder(Context context, Space space)
         {
             this.context = context;
-            this.Space = space;
-            this.Folder = folder;
-            this.key = key;
+            this.space = space;
 
-            this.CreatedState = new SynchronizedFolderState(folder);
-            this.watcher = WatchDirectory(folder);
+            //this.CreatedState = new SynchronizedFolderState(folder);
+
+            SetupWatcher();
         }
 
-        private FileSystemWatcher WatchDirectory(string folder)
+        private void SetupWatcher()
         {
-            FileSystemWatcher watcher = new FileSystemWatcher(folder);
-
-            watcher.Changed += new FileSystemEventHandler(onChanged);
-            watcher.Created += new FileSystemEventHandler(onCreated);
-            watcher.Deleted += new FileSystemEventHandler(onDeleted);
-            watcher.Renamed += new RenamedEventHandler(onRenamed);
-
-            return watcher;
+            _watcher = new FileSystemWatcher(space.folder);
+            _watcher.Changed += new FileSystemEventHandler(onChanged);
+            _watcher.Created += new FileSystemEventHandler(onCreated);
+            _watcher.Deleted += new FileSystemEventHandler(onDeleted);
+            _watcher.Renamed += new RenamedEventHandler(onRenamed);
         }
 
-        private void watch()
+        public void watch()
         {
-            watcher.EnableRaisingEvents = true;
+            _watcher.EnableRaisingEvents = true;
+        }
+
+        public void unwatch()
+        {
+            _watcher.EnableRaisingEvents = false;
         }
 
         private void onRenamed(object sender, RenamedEventArgs e)
@@ -75,25 +73,25 @@ namespace uKeepIt
 
         public void syncFolder()
         {
-            changed = true;
+            _changed = true;
             launchSynchronizer();
         }
 
         private void launchSynchronizer()
         {
             // discards while running or if no changes left
-            if (!changed || syncing) return;
+            if (!_changed || _syncing) return;
 
-            syncing = true;
-            changed = false;
+            _syncing = true;
+            _changed = false;
 
-            Console.WriteLine("launching synchronizer for {0}", Folder);
-            new Synchronizer(Space.CreateEditor(key), Folder, context.multiobjectstore);
-            Console.WriteLine("synchronizer finished for {0}", Folder);
-            syncing = false;
+            Console.WriteLine("launching synchronizer for {0}", space.folder);
+            new Synchronizer(space.CreateEditor(context.key, context.multiobjectstore, context.stores), space.folder, context.multiobjectstore);
+            Console.WriteLine("synchronizer finished for {0}", space.folder);
+            _syncing = false;
 
             // run again if a change has been made while Synchronizer was running
             launchSynchronizer();
         }
     }
-} 
+}
