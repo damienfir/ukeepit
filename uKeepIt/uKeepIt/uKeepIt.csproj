@@ -60,6 +60,9 @@
     <Compile Include="CheckInFolder.xaml.cs">
       <DependentUpon>CheckInFolder.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ConfigurationWindow.xaml.cs">
+      <DependentUpon>ConfigurationWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Context.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="CreatedFileEntry.cs" />
@@ -68,7 +71,6 @@
     <Compile Include="NotificationMenu.cs" />
     <Compile Include="FileEntry.cs" />
     <Compile Include="FolderEntry.cs" />
-    <Compile Include="FolderWatcher.cs" />
     <Compile Include="MiniBurrow\Folder\MultiStore.cs" />
     <Compile Include="MiniBurrow\Serialization\IniFile.cs" />
     <Compile Include="MiniBurrow\Serialization\IniFileSection.cs" />
@@ -109,6 +111,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="ConfigurationWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

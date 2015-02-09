@@ -99,7 +99,7 @@ namespace uKeepIt.MiniBurrow.Serialization
             var text = "";
             if (SectionsByName.TryGetValue("", out section) && section.Pairs.Count>0) text += section.ToText();
             foreach (var pair in SectionsByName)
-                if (pair.Key != "") text += "[" + pair.Key + "]\n" + pair.Value.ToText();
+                if (pair.Key != "") text += "[" + pair.Key + "]\r\n" + pair.Value.ToText();
             return text;
         }
 

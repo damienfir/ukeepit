@@ -28,9 +28,9 @@ namespace uKeepIt.MiniBurrow.Serialization
             foreach (var tuple in Pairs)
             {
                 var value = tuple.Value.Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\0", "\\0");
-                text += tuple.Key + " = " + value + "\n";
+                text += tuple.Key + " = " + value + "\r\n";
             }
-            return text + "\n";
+            return text + "\r\n";
         }
 
         public static bool ValidKey(string key)

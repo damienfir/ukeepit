@@ -30,6 +30,9 @@ namespace uKeepIt
 
             context.watchFolders();
 
+            Window configwindow = new ConfigurationWindow(config);
+            configwindow.Show();
+
             //new GarbageCollection(new ImmutableStack<Store>(config.Stores), config.MultiObjectStore.AsStack());
 
             //Environment.Exit(0);

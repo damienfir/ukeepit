@@ -5,6 +5,7 @@ using System.Text;
 using uKeepIt.MiniBurrow.Folder;
 using uKeepIt.MiniBurrow.Serialization;
 using uKeepIt.MiniBurrow;
+using System.IO;
 
 namespace uKeepIt
 {
@@ -13,9 +14,9 @@ namespace uKeepIt
         public readonly string _location;
 
         private Context _context;
-        private byte[] _key;
-        private Dictionary<string, Store> _stores;
-        private Dictionary<string, Space> _spaces;
+        public byte[] key;
+        public Dictionary<string, Store> stores;
+        public Dictionary<string, Space> spaces;
 
         private readonly string _store_section = "store";
         private readonly string _space_section = "space";
@@ -30,26 +31,53 @@ namespace uKeepIt
             //Folder = appDataFolder + "\\ukeepit";
             _location = @"C:\Users\damien\Documents\ukeepit\test\config\configuration";
 
-            _stores = new Dictionary<string, Store>();
-            _spaces = new Dictionary<string, Space>();
+            stores = new Dictionary<string, Store>();
+            spaces = new Dictionary<string, Space>();
 
             readConfig();
             reloadContext();
         }
 
-        public void addStore(string name, string location)
+        public void reloadContext()
         {
-            _stores.Add(name, new Store(location));
+            _context.reloadKey(key);
+            _context.reloadObjectStore(stores);
+            _context.reloadSpaces(spaces);
         }
 
-        public void removeStore(string name) { }
-
-        public void addSpace(string name, string location)
+        public bool addStore(string name, string location)
         {
-            _spaces.Add(name, new Space(name, location));
+            if (stores.ContainsKey(name))
+                return false;
+
+            location += @"\spaces";
+            if (!Directory.Exists(location))
+            {
+                if (!MiniBurrow.Static.DirectoryCreate(location))
+                    return false;
+            }
+            stores.Add(name, new Store(location));
+            return true;
         }
 
-        public void removeSpace(string name) { }
+        public bool removeStore(string name)
+        {
+            return stores.Remove(name);
+        }
+
+        public bool addSpace(string name, string location)
+        {
+            if (spaces.ContainsKey(name))
+                return false;
+
+            spaces.Add(name, new Space(name, location));
+            return true;
+        }
+
+        public bool removeSpace(string name)
+        {
+            return spaces.Remove(name);
+        }
 
         public void readConfig()
         {
@@ -71,31 +99,39 @@ namespace uKeepIt
                 }
             }
 
-            foreach (var store in _stores)
+            foreach (var store in stores)
             {
                 foreach (var checkedin in store.Value.ListSpaces())
                 {
-                    if (_spaces.ContainsKey(checkedin)) continue;
+                    if (spaces.ContainsKey(checkedin)) continue;
                     addSpace(checkedin, _default_folder);
                 }
             }
 
-            _key = new byte[32];
-            for (int i = 0; i < _key.Length; i++) _key[i] = 0x01;
-        }
-
-        public void reloadContext()
-        {
-            _context.reloadKey(_key);
-            _context.reloadObjectStore(_stores);
-            _context.reloadSpaces(_spaces);
+            key = new byte[32];
+            for (int i = 0; i < key.Length; i++) key[i] = 0x01;
         }
 
         public void writeConfig()
         {
             IniFile config = new IniFile();
+            string tpl = "{0} {1}";
 
-            // write
+            foreach (var store in stores)
+            {
+                IniFileSection section = config.Section(String.Format(tpl, _store_section, store.Key));
+                section.Set(_path_key, store.Value.Folder);
+            }
+
+            foreach (var space in spaces) {
+                IniFileSection section = config.Section(String.Format(tpl, _space_section, space.Key));
+                section.Set(_path_key, space.Value.folder);
+            }
+
+            IniFileSection sec = config.Section(_key_section);
+            sec.Set(_path_key, "--");
+
+            MiniBurrow.Static.WriteFile(_location, config.ToBytes());
         }
     }
 }
