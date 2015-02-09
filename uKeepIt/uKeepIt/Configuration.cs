@@ -22,7 +22,7 @@ namespace uKeepIt
         private readonly string _space_section = "space";
         private readonly string _key_section = "key";
         private readonly string _path_key = "path";
-        private readonly string _default_folder = "";
+        public readonly string _default_folder = "--";
 
         public Configuration(Context context)
         {
@@ -42,7 +42,7 @@ namespace uKeepIt
         {
             _context.reloadKey(key);
             _context.reloadObjectStore(stores);
-            _context.reloadSpaces(spaces);
+            _context.reloadSpaces(spaces.Where(x => x.Value.folder != _default_folder).ToDictionary(e => e.Key, e => e.Value));
         }
 
         public bool addStore(string name, string location)
@@ -74,8 +74,12 @@ namespace uKeepIt
             return true;
         }
 
-        public bool removeSpace(string name)
+        public bool removeSpace(string name, bool delete_folder = false)
         {
+            if (delete_folder)
+            {
+                MiniBurrow.Static.DirectoryDelete(spaces[name].folder);
+            }
             return spaces.Remove(name);
         }
 

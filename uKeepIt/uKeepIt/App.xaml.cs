@@ -16,14 +16,14 @@ namespace uKeepIt
         // Configuration
         //public readonly static Configuration Configuration = new Configuration();
 
-        //private NotificationMenu notification;
+        private NotificationMenu notification;
 
         Configuration config;
         Context context;
 
         private void main(object sender, StartupEventArgs e)
         {
-            //notification = new NotificationMenu(this);
+            notification = new NotificationMenu(this);
 
             context = new Context();
             config = new Configuration(context);

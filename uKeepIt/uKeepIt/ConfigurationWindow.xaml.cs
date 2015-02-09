@@ -69,12 +69,12 @@ namespace uKeepIt
                 Grid.SetColumn(label2, 1);
                 grid.Children.Add(label2);
 
-                var delbutton = new Button();
-                delbutton.Content = "delete";
-                delbutton.Tag = store.Key;
-                delbutton.Click += store_del_button_click;
-                Grid.SetColumn(delbutton, 2);
-                grid.Children.Add(delbutton);
+                var delete_btn = new Button();
+                delete_btn.Content = "delete";
+                delete_btn.Tag = store.Key;
+                delete_btn.Click += store_del_button_click;
+                Grid.SetColumn(delete_btn, 2);
+                grid.Children.Add(delete_btn);
 
                 cloud_stack.Children.Add(grid);
             }
@@ -85,13 +85,62 @@ namespace uKeepIt
             folders_stack.Children.Clear();
             foreach (var space in _config.spaces)
             {
+                var grid = new Grid();
+                grid.ColumnDefinitions.Add(new ColumnDefinition());
+                grid.ColumnDefinitions.Add(new ColumnDefinition());
+                grid.ColumnDefinitions.Add(new ColumnDefinition());
+
                 var label = new Label();
-                label.Content = string.Format("{0} ({1})", space.Key, space.Value.folder);
-                folders_stack.Children.Add(label);
+                label.Content = space.Key;
+                Grid.SetColumn(label, 0);
+                grid.Children.Add(label);
+
+                var label2 = new Label();
+                label2.Content = space.Value.folder;
+                Grid.SetColumn(label2, 1);
+                grid.Children.Add(label2);
+
+                if (space.Value.folder != _config._default_folder)
+                {
+                    var remove_btn = new Button();
+                    remove_btn.Content = "remove locally";
+                    remove_btn.Tag = space.Key;
+                    remove_btn.Click += space_remove_button_click;
+                    Grid.SetColumn(remove_btn, 2);
+                    grid.Children.Add(remove_btn);
+                }
+                else
+                {
+                    var checkout_btn = new Button();
+                    checkout_btn.Content = "checkout";
+                    checkout_btn.Tag = space.Key;
+                    checkout_btn.Click += space_checkout_button_click;
+                    Grid.SetColumn(checkout_btn, 2);
+                    grid.Children.Add(checkout_btn);
+
+                    grid.ColumnDefinitions.Add(new ColumnDefinition());
+
+                    var delete_btn = new Button();
+                    delete_btn.Content = "delete permanently";
+                    delete_btn.Tag = space.Key;
+                    delete_btn.Click += space_delete_button_click;
+                    Grid.SetColumn(delete_btn, 3);
+                    grid.Children.Add(delete_btn);
+                }
+
+                folders_stack.Children.Add(grid);
             }
         }
 
-        bool confirmAction(string message)
+        private void space_checkout_button_click(object sender, RoutedEventArgs e)
+        {
+            var to_checkout = (sender as Button).Tag as string;
+            var target_location = choose_folder();
+
+            checkout_space(to_checkout, target_location);
+        }
+
+        bool confirm_action(string message)
         {
             var button = MessageBoxButton.OKCancel;
             var result = MessageBox.Show(message, "", button);
@@ -105,6 +154,14 @@ namespace uKeepIt
                 _config.reloadContext();
                 _config.writeConfig();
             }
+        }
+
+        private string choose_folder()
+        {
+            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+            if (result != System.Windows.Forms.DialogResult.OK) return "";
+            return dialog.SelectedPath;
         }
 
         private void show_click(object sender, RoutedEventArgs e)
@@ -122,38 +179,44 @@ namespace uKeepIt
 
         private void store_add_button_click(object sender, RoutedEventArgs e)
         {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-            if (result != System.Windows.Forms.DialogResult.OK) return;
-
-            add_store(dialog.SelectedPath);
+            add_store(choose_folder());
             draw_stores();
         }
 
         void store_del_button_click(object sender, RoutedEventArgs e)
         {
-            var to_remove = ((Button)sender).Tag;
-
-            if (!confirmAction("remove store"))
-                return;
-
-            remove_store(to_remove as String);
-            draw_stores();
+            if (confirm_action("remove store"))
+            {
+                var to_remove = ((Button)sender).Tag as string;
+                remove_store(to_remove as String);
+                draw_stores();
+            }
         }
 
         private void space_add_button_click(object sender, RoutedEventArgs e)
         {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-            if (result != System.Windows.Forms.DialogResult.OK) return;
-
-            add_space(dialog.SelectedPath);
+            var target = choose_folder();
+            if (target != "")
+                add_space(target);
             draw_spaces();
         }
 
-        private void space_del_button_click(object sender, RoutedEventArgs e)
+        private void space_remove_button_click(object sender, RoutedEventArgs e)
         {
+            var to_remove = ((Button)sender).Tag as string;
+            _config.removeSpace(to_remove);
+            execute(_config.addSpace(to_remove, _config._default_folder));
+            draw_spaces();
+        }
 
+        private void space_delete_button_click(object sender, RoutedEventArgs e)
+        {
+            if (confirm_action("remove space permanently ?"))
+            {
+                var to_remove = ((Button)sender).Tag as string;
+                execute(_config.removeSpace(to_remove, true));
+                draw_spaces();
+            }
         }
 
         private void done_button_click(object sender, RoutedEventArgs e)
@@ -167,22 +230,33 @@ namespace uKeepIt
             folder += @"\ukeepit";
 
             execute(_config.addStore(name, folder));
+            draw_spaces();
         }
 
         private void remove_store(string name)
         {
             execute(_config.removeStore(name));
+            draw_stores();
         }
 
         private void add_space(string folder)
         {
             string name = folder.Replace(System.IO.Path.GetDirectoryName(folder) + "\\", "");
             execute(_config.addSpace(name, folder));
+            draw_spaces();
         }
 
         private void remove_space(string name)
         {
             execute(_config.removeSpace(name));
+            draw_spaces();
+        }
+
+        private void checkout_space(string name, string target_location)
+        {
+            _config.removeSpace(name);
+            execute(_config.addSpace(name, target_location));
+            draw_spaces();
         }
     }
 }
