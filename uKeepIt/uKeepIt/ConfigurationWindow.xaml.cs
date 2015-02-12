@@ -43,7 +43,7 @@ namespace uKeepIt
             }
         }
 
-        private void reloadWindow()
+        public void reloadWindow()
         {
             draw_stores();
             draw_spaces();
@@ -132,14 +132,6 @@ namespace uKeepIt
             }
         }
 
-        private void space_checkout_button_click(object sender, RoutedEventArgs e)
-        {
-            var to_checkout = (sender as Button).Tag as string;
-            var target_location = choose_folder();
-
-            checkout_space(to_checkout, target_location);
-        }
-
         bool confirm_action(string message)
         {
             var button = MessageBoxButton.OKCancel;
@@ -209,6 +201,14 @@ namespace uKeepIt
             draw_spaces();
         }
 
+        private void space_checkout_button_click(object sender, RoutedEventArgs e)
+        {
+            var to_checkout = (sender as Button).Tag as string;
+            var target_location = choose_folder();
+
+            checkout_space(to_checkout, target_location);
+        }
+
         private void space_delete_button_click(object sender, RoutedEventArgs e)
         {
             if (confirm_action("remove space permanently ?"))
@@ -221,7 +221,7 @@ namespace uKeepIt
 
         private void done_button_click(object sender, RoutedEventArgs e)
         {
-            Close();
+            Hide();
         }
 
         private void add_store(string folder)

@@ -13,29 +13,19 @@ namespace uKeepIt
     /// </summary>
     public partial class App : Application
     {
-        // Configuration
-        //public readonly static Configuration Configuration = new Configuration();
-
-        private NotificationMenu notification;
-
+        NotificationMenu notification;
         Configuration config;
+        ConfigurationWindow configwindow;
         Context context;
 
-        private void main(object sender, StartupEventArgs e)
+        App()
         {
-            notification = new NotificationMenu(this);
-
             context = new Context();
             config = new Configuration(context);
+            configwindow = new ConfigurationWindow(config);
+            notification = new NotificationMenu(configwindow);
 
             context.watchFolders();
-
-            Window configwindow = new ConfigurationWindow(config);
-            configwindow.Show();
-
-            //new GarbageCollection(new ImmutableStack<Store>(config.Stores), config.MultiObjectStore.AsStack());
-
-            //Environment.Exit(0);
         }
     }
 }

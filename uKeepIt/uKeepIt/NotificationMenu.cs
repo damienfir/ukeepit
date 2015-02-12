@@ -10,21 +10,20 @@ namespace uKeepIt
 {
     class NotificationMenu
     {
-        App app;
-        NotifyIcon notifyicon;
-        ContextMenuStrip menu;
+        ConfigurationWindow _configwindow;
+        NotifyIcon _icon;
 
-        public NotificationMenu(App app)
+        public NotificationMenu(ConfigurationWindow configwindow)
         {
-            this.app = app;
+            this._configwindow = configwindow; ;
 
-            menu = new ContextMenuStrip();
+            ContextMenuStrip menu = new ContextMenuStrip();
             
             menu.Items.Add(new ToolStripButton("Configuration", null, onConfiguration));
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(new ToolStripButton("Quit", null, onQuit));
 
-            notifyicon = new NotifyIcon(new System.ComponentModel.Container())
+            _icon = new NotifyIcon(new System.ComponentModel.Container())
             {
                 ContextMenuStrip = menu,
                 Icon = new Icon("icon.ico"),
@@ -32,16 +31,34 @@ namespace uKeepIt
                 Visible = true
             };
 
+            _icon.Click += _icon_Click;
+        }
+
+        void _icon_Click(object sender, EventArgs e)
+        {
+            MouseEventArgs a = e as MouseEventArgs;
+            if (a.Button != MouseButtons.Right)
+                showConfig();
         }
 
         private void onConfiguration(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            showConfig();
         }
 
         private void onQuit(object sender, EventArgs e)
         {
-            app.Shutdown();
+            System.Windows.Application.Current.Shutdown();
+        }
+
+        private void showConfig()
+        {
+            try
+            {
+                _configwindow.Show();
+                _configwindow.reloadWindow();
+            }
+            catch (InvalidOperationException) { }
         }
     }
 }
