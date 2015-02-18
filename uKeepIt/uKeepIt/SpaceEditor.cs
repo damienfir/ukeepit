@@ -14,7 +14,8 @@ namespace uKeepIt
     {
         public readonly MultiObjectStore multiObjectStore;
         public readonly ImmutableStack<Root> Roots;
-        public readonly ArraySegment<byte> Key;
+        public readonly ArraySegment<byte> ReadKey;
+        public readonly ArraySegment<byte> WriteKey;
         public readonly Dictionary<Hash, FileEntry> FilesByContentId = new Dictionary<Hash, FileEntry>();
         public readonly Dictionary<string, ImmutableStack<FileEntry>> FilesByPath = new Dictionary<string, ImmutableStack<FileEntry>>();
         public readonly Dictionary<string, FolderEntry> FoldersByPath = new Dictionary<string, FolderEntry>();
@@ -26,10 +27,11 @@ namespace uKeepIt
         private ulong Revision=0;
         private bool hasChanges = false;
 
-        public SpaceEditor(MultiObjectStore multiObjectStore, ImmutableStack<Root> roots, ArraySegment<byte> key)
+        public SpaceEditor(MultiObjectStore multiObjectStore, ImmutableStack<Root> roots, ArraySegment<byte> readkey, ArraySegment<byte> writekey) 
         {
             this.multiObjectStore = multiObjectStore;
-            this.Key= key;
+            this.ReadKey= readkey;
+            this.WriteKey = writekey;
             this.Roots = roots;
 
             // Fully read the space
@@ -39,7 +41,7 @@ namespace uKeepIt
                 if (MergedHashesByHexId.ContainsKey(objectUrl.Hash.Hex())) continue;
 
                 var envelopeObject= multiObjectStore.Get(objectUrl.Hash);
-                var reference = MiniBurrow.Aes.Envelope.Open(envelopeObject, Key);
+                var reference = MiniBurrow.Aes.Envelope.Open(envelopeObject, ReadKey);
 
                 var obj = multiObjectStore.Get(reference.Hash);
                 MiniBurrow.Aes.Static.Process(obj.Data, reference.Key, reference.Nonce);
@@ -178,7 +180,7 @@ namespace uKeepIt
             if (hash == null) return false;
 
             // Submit the envelope
-            var envelope = MiniBurrow.Aes.Envelope.Create(new ObjectReference(hash, encryptedObject.Key, encryptedObject.Nonce), Key);
+            var envelope = MiniBurrow.Aes.Envelope.Create(new ObjectReference(hash, encryptedObject.Key, encryptedObject.Nonce), WriteKey);
             var envelopeHash = multiObjectStore.Put(envelope);
             if (envelopeHash==null) return false;
 

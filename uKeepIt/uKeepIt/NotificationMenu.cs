@@ -15,7 +15,7 @@ namespace uKeepIt
 
         public NotificationMenu(ConfigurationWindow configwindow)
         {
-            this._configwindow = configwindow; ;
+            this._configwindow = configwindow;
 
             ContextMenuStrip menu = new ContextMenuStrip();
             
@@ -32,6 +32,8 @@ namespace uKeepIt
             };
 
             _icon.Click += _icon_Click;
+
+            showConfig();
         }
 
         void _icon_Click(object sender, EventArgs e)

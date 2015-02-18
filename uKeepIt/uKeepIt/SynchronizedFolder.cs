@@ -63,35 +63,41 @@ namespace uKeepIt
 
         private void onChanged(object sender, FileSystemEventArgs e)
         {
-            if (e.Name.Equals(".ukeepit"))
+            if (!e.Name.Equals(".ukeepit"))
             {
-                Console.WriteLine("detected a change in .ukeepit");
-                return;
+                syncFolder();
             }
-            syncFolder();
         }
 
         public void syncFolder()
         {
-            _changed = true;
-            launchSynchronizer();
+            syncFolder(context.key, context.key);
         }
 
-        private void launchSynchronizer()
+        public void syncFolder(ArraySegment<byte> readkey, ArraySegment<byte> writekey)
+        {
+            _changed = true;
+            launchSynchronizer(readkey, writekey);
+        }
+
+        private void launchSynchronizer(ArraySegment<byte> readkey, ArraySegment<byte> writekey)
         {
             // discards while running or if no changes left
             if (!_changed || _syncing) return;
+
+            // stop if writekey set
+            if (writekey.Array == null) return;
 
             _syncing = true;
             _changed = false;
 
             Console.WriteLine("launching synchronizer for {0}", space.folder);
-            new Synchronizer(space.CreateEditor(context.key, context.multiobjectstore, context.stores), space.folder, context.multiobjectstore);
+            new Synchronizer(space.CreateEditor(readkey, writekey, context.multiobjectstore, context.stores), space.folder, context.multiobjectstore);
             Console.WriteLine("synchronizer finished for {0}", space.folder);
             _syncing = false;
 
             // run again if a change has been made while Synchronizer was running
-            launchSynchronizer();
+            launchSynchronizer(readkey, writekey);
         }
     }
 }

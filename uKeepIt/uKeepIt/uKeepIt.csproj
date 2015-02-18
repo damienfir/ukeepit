@@ -60,7 +60,7 @@
     <Compile Include="CheckInFolder.xaml.cs">
       <DependentUpon>CheckInFolder.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Key.cs" />
+    <Compile Include="AESKey.cs" />
     <Compile Include="ConfigurationWindow.xaml.cs">
       <DependentUpon>ConfigurationWindow.xaml</DependentUpon>
     </Compile>

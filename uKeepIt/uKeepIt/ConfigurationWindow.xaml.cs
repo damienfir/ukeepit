@@ -22,6 +22,9 @@ namespace uKeepIt
     public partial class ConfigurationWindow : Window
     {
         private Configuration _config;
+        private TextBox pw_input1;
+        private TextBox pw_input2;
+
         public ConfigurationWindow(Configuration config)
         {
             this._config = config;
@@ -29,24 +32,63 @@ namespace uKeepIt
             InitializeComponent();
             //App.Configuration.Reloaded += BurrowConfiguration_Reloaded;
             //BurrowConfiguration_Reloaded(null, null);
-            reloadWindow();
-        }
-
-        private void window_drop(object sender, DragEventArgs e)
-        {
-            // If we got files, add them to the list
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                foreach (string file in files)
-                    add_space(file);
-            }
+            //reloadWindow();
         }
 
         public void reloadWindow()
         {
+            draw_password();
             draw_stores();
             draw_spaces();
+        }
+
+        private void draw_password()
+        {
+            var name = "pwgrid";
+            Grid grid = (Grid)maingrid.FindName(name);
+            if (grid == null)
+            {
+                grid = new Grid();
+                grid.Name = name;
+            }
+            else
+            {
+                grid.Children.Clear();
+                grid.ColumnDefinitions.Clear();
+                grid.RowDefinitions.Clear();
+            }
+
+            if (_config.key == null)
+            {
+                grid.ColumnDefinitions.Add(new ColumnDefinition());
+                grid.ColumnDefinitions.Add(new ColumnDefinition());
+                grid.RowDefinitions.Add(new RowDefinition());
+                grid.RowDefinitions.Add(new RowDefinition());
+
+                pw_input1 = new TextBox();
+                Grid.SetRow(pw_input1, 0);
+                grid.Children.Add(pw_input1);
+
+                pw_input2 = new TextBox();
+                Grid.SetRow(pw_input2, 1);
+                grid.Children.Add(pw_input2);
+
+                var btn_set = new Button();
+                btn_set.Content = "Set";
+                btn_set.Click += password_set_button_click;
+                Grid.SetColumn(btn_set, 1);
+                grid.Children.Add(btn_set);
+            }
+            else
+            {
+                var btn_change = new Button();
+                btn_change.Content = "Change";
+                btn_change.Click += password_change_button_click;
+                grid.Children.Add(btn_change);
+            }
+
+            Grid.SetColumn(grid, 1);
+            maingrid.Children.Add(grid);
         }
 
         private void draw_stores()
@@ -164,9 +206,42 @@ namespace uKeepIt
             catch (Exception) { MessageBox.Show("Unable to open the folder (with Windows Explorer). Does the folder exist?"); }
         }
 
-        private void password_button_click(object sender, RoutedEventArgs e)
+        private void password_set_button_click(object sender, RoutedEventArgs e)
         {
+            var pw1 = pw_input1.Text;
+            var pw2 = pw_input2.Text;
+            set_password(pw1, pw2);
+        }
 
+        private bool set_password(string pw1, string pw2)
+        {
+            if (pw1.Equals(""))
+            {
+                var res = MessageBox.Show("password empty", "", MessageBoxButton.OK);
+                return false;
+            }
+
+            if (pw1 != pw2)
+            {
+                var res = MessageBox.Show("passwords don't match", "", MessageBoxButton.OK);
+                return false;
+            }
+
+            _config.changeKey(pw1);
+            draw_password();
+            return true;
+        }
+
+        private void password_change_button_click(object sender, RoutedEventArgs e)
+        {
+            if (!_config.invalidateKey(""))
+            {
+                MessageBox.Show("password is not correct", "", MessageBoxButton.OK);
+            }
+            else
+            {
+                draw_password();
+            }
         }
 
         private void store_add_button_click(object sender, RoutedEventArgs e)
@@ -257,6 +332,11 @@ namespace uKeepIt
             _config.removeSpace(name);
             execute(_config.addSpace(name, target_location));
             draw_spaces();
+        }
+
+        private void quit_btn_click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
         }
     }
 }

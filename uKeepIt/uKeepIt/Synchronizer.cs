@@ -68,7 +68,10 @@ namespace uKeepIt
         {
             SpaceEditor.UpdateRevision(Now);
             FileInfo file = new FileInfo(_revision_file_name);
-            file.Attributes &= ~FileAttributes.Hidden;
+            if (File.Exists(_revision_file_name))
+            {
+                file.Attributes &= ~FileAttributes.Hidden;
+            }
             File.WriteAllText(_revision_file_name, SpaceEditor.GetRevision().ToString());
             file.Attributes |= FileAttributes.Hidden;
         }

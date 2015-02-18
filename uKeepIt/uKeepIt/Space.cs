@@ -18,13 +18,13 @@ namespace uKeepIt
             this.folder = folder;
         }
 
-        public SpaceEditor CreateEditor(ArraySegment<byte> key, MultiObjectStore multiobjectstore, List<Store> stores)
+        public SpaceEditor CreateEditor(ArraySegment<byte> readkey, ArraySegment<byte> writekey, MultiObjectStore multiobjectstore, List<Store> stores)
         {
             var roots = new ImmutableStack<Root>();
             foreach (var store in stores)
                 roots = roots.With(store.SpaceRoot(name));
 
-            return new SpaceEditor(multiobjectstore, roots, key);
+            return new SpaceEditor(multiobjectstore, roots, readkey, writekey);
         }
 
     }

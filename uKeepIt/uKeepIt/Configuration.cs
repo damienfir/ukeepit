@@ -12,6 +12,7 @@ namespace uKeepIt
     public class Configuration
     {
         public readonly string _location;
+        public readonly string _key_location;
 
         private Context _context;
         public byte[] key;
@@ -30,6 +31,7 @@ namespace uKeepIt
             //var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             //Folder = appDataFolder + "\\ukeepit";
             _location = @"C:\Users\damien\Documents\ukeepit\test\config\configuration";
+            _key_location = @"C:\Users\damien\Documents\ukeepit\test\config\key";
 
             stores = new Dictionary<string, Store>();
             spaces = new Dictionary<string, Space>();
@@ -43,6 +45,7 @@ namespace uKeepIt
             _context.reloadKey(key);
             _context.reloadObjectStore(stores);
             _context.reloadSpaces(spaces.Where(x => x.Value.folder != _default_folder).ToDictionary(e => e.Key, e => e.Value));
+            _context.synchronize();
         }
 
         public bool addStore(string name, string location)
@@ -50,10 +53,10 @@ namespace uKeepIt
             if (stores.ContainsKey(name))
                 return false;
 
-            location += @"\spaces";
-            if (!Directory.Exists(location))
+            var spaces_location = location + @"\spaces";
+            if (!Directory.Exists(spaces_location))
             {
-                if (!MiniBurrow.Static.DirectoryCreate(location))
+                if (!MiniBurrow.Static.DirectoryCreate(spaces_location))
                     return false;
             }
             stores.Add(name, new Store(location));
@@ -112,8 +115,8 @@ namespace uKeepIt
                 }
             }
 
-            key = new byte[32];
-            for (int i = 0; i < key.Length; i++) key[i] = 0x01;
+            var keyfile = config.SectionsByName[_key_section].Get(_path_key);
+            key = MiniBurrow.Static.FileBytes(keyfile, null);
         }
 
         public void writeConfig()
@@ -133,9 +136,28 @@ namespace uKeepIt
             }
 
             IniFileSection sec = config.Section(_key_section);
-            sec.Set(_path_key, "--");
+            sec.Set(_path_key, _key_location);
 
             MiniBurrow.Static.WriteFile(_location, config.ToBytes());
+        }
+
+        public bool invalidateKey(string pw)
+        {
+            byte[] keycheck = AESKey.generateKey(pw);
+            //if (keycheck.SequenceEqual(key))
+            if (true)
+            {
+                key = null;
+                return true;
+            }
+            return false;
+        }
+
+        internal void changeKey(string pw)
+        {
+            byte[] key = AESKey.generateKey(pw);
+            _context.reloadKey(key);
+            AESKey.storeKey(key, _key_location);
         }
     }
 }
