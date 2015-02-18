@@ -12,10 +12,10 @@ namespace uKeepIt
     public class Configuration
     {
         public readonly string _location;
-        public readonly string _key_location;
+        public readonly string _default_key_location;
 
         private Context _context;
-        public byte[] key;
+        public Tuple<string, byte[]> key;
         public Dictionary<string, Store> stores;
         public Dictionary<string, Space> spaces;
 
@@ -31,7 +31,7 @@ namespace uKeepIt
             //var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             //Folder = appDataFolder + "\\ukeepit";
             _location = @"C:\Users\damien\Documents\ukeepit\test\config\configuration";
-            _key_location = @"C:\Users\damien\Documents\ukeepit\test\config\key";
+            _default_key_location = @"C:\Users\damien\Documents\ukeepit\test\config\key";
 
             stores = new Dictionary<string, Store>();
             spaces = new Dictionary<string, Space>();
@@ -42,7 +42,7 @@ namespace uKeepIt
 
         public void reloadContext()
         {
-            _context.reloadKey(key);
+            _context.reloadKey(key.Item2);
             _context.reloadObjectStore(stores);
             _context.reloadSpaces(spaces.Where(x => x.Value.folder != _default_folder).ToDictionary(e => e.Key, e => e.Value));
             _context.synchronize();
@@ -115,8 +115,8 @@ namespace uKeepIt
                 }
             }
 
-            var keyfile = config.SectionsByName[_key_section].Get(_path_key);
-            key = MiniBurrow.Static.FileBytes(keyfile, null);
+            var key_file = config.SectionsByName[_key_section].Get(_path_key, _default_key_location);
+            key = Tuple.Create(key_file, MiniBurrow.Static.FileBytes(key_file, null));
         }
 
         public void writeConfig()
@@ -136,7 +136,7 @@ namespace uKeepIt
             }
 
             IniFileSection sec = config.Section(_key_section);
-            sec.Set(_path_key, _key_location);
+            sec.Set(_path_key, key.Item1);
 
             MiniBurrow.Static.WriteFile(_location, config.ToBytes());
         }
@@ -144,20 +144,25 @@ namespace uKeepIt
         public bool invalidateKey(string pw)
         {
             byte[] keycheck = AESKey.generateKey(pw);
-            //if (keycheck.SequenceEqual(key))
-            if (true)
+
+            if (keycheck.SequenceEqual(key.Item2))
             {
-                key = null;
+                key = Tuple.Create(key.Item1, (byte[])null);
                 return true;
             }
             return false;
         }
 
+        public byte[] getKey()
+        {
+            return key.Item2;
+        }
+
         internal void changeKey(string pw)
         {
-            byte[] key = AESKey.generateKey(pw);
-            _context.reloadKey(key);
-            AESKey.storeKey(key, _key_location);
+            key = Tuple.Create(key.Item1, AESKey.generateKey(pw));
+            _context.reloadKey(key.Item2);
+            AESKey.storeKey(key.Item2, key.Item1);
         }
     }
 }

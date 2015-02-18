@@ -24,6 +24,7 @@ namespace uKeepIt
         private Configuration _config;
         private TextBox pw_input1;
         private TextBox pw_input2;
+        private TextBox pw_input_check;
 
         public ConfigurationWindow(Configuration config)
         {
@@ -42,7 +43,7 @@ namespace uKeepIt
             draw_spaces();
         }
 
-        private void draw_password()
+        private void draw_password(bool check = false)
         {
             var name = "pwgrid";
             Grid grid = (Grid)maingrid.FindName(name);
@@ -50,6 +51,9 @@ namespace uKeepIt
             {
                 grid = new Grid();
                 grid.Name = name;
+                maingrid.RegisterName(name, grid);
+                Grid.SetColumn(grid, 1);
+                maingrid.Children.Add(grid);
             }
             else
             {
@@ -58,7 +62,22 @@ namespace uKeepIt
                 grid.RowDefinitions.Clear();
             }
 
-            if (_config.key == null)
+            if (check)
+            {
+                grid.ColumnDefinitions.Add(new ColumnDefinition());
+                grid.ColumnDefinitions.Add(new ColumnDefinition());
+
+                pw_input_check = new TextBox();
+                Grid.SetColumn(pw_input_check, 0);
+                grid.Children.Add(pw_input_check);
+
+                var btn_check = new Button();
+                btn_check.Content = "Verify";
+                btn_check.Click += password_check_button_click;
+                Grid.SetColumn(btn_check, 1);
+                grid.Children.Add(btn_check);
+            }
+            else if (_config.getKey() == null)
             {
                 grid.ColumnDefinitions.Add(new ColumnDefinition());
                 grid.ColumnDefinitions.Add(new ColumnDefinition());
@@ -81,14 +100,19 @@ namespace uKeepIt
             }
             else
             {
+                grid.ColumnDefinitions.Add(new ColumnDefinition());
+
+                var label = new Label();
+                label.Content = "password already set";
+                grid.Children.Add(label);
+
                 var btn_change = new Button();
                 btn_change.Content = "Change";
                 btn_change.Click += password_change_button_click;
+                Grid.SetColumn(btn_change, 1);
+
                 grid.Children.Add(btn_change);
             }
-
-            Grid.SetColumn(grid, 1);
-            maingrid.Children.Add(grid);
         }
 
         private void draw_stores()
@@ -232,16 +256,22 @@ namespace uKeepIt
             return true;
         }
 
-        private void password_change_button_click(object sender, RoutedEventArgs e)
+        private void password_check_button_click(object sender, RoutedEventArgs e)
         {
-            if (!_config.invalidateKey(""))
-            {
-                MessageBox.Show("password is not correct", "", MessageBoxButton.OK);
-            }
-            else
+            var pw = pw_input_check.Text;
+            if (_config.invalidateKey(pw))
             {
                 draw_password();
             }
+            else
+            {
+                MessageBox.Show("password is not correct", "", MessageBoxButton.OK);
+            }
+        }
+
+        private void password_change_button_click(object sender, RoutedEventArgs e)
+        {
+            draw_password(true);
         }
 
         private void store_add_button_click(object sender, RoutedEventArgs e)
