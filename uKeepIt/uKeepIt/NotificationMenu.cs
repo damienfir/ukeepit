@@ -58,7 +58,7 @@ namespace uKeepIt
             try
             {
                 _configwindow.Show();
-                _configwindow.reloadWindow();
+                //_configwindow.reloadWindow();
             }
             catch (InvalidOperationException) { }
         }

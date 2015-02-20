@@ -37,7 +37,7 @@ namespace uKeepIt
             spaces = new Dictionary<string, Space>();
 
             readConfig();
-            reloadContext();
+            //reloadContext();
         }
 
         public void reloadContext()
