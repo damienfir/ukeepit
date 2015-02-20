@@ -44,8 +44,11 @@ namespace uKeepIt
 
             loadStores();
             loadSpaces();
+
             StoreView.ItemsSource = store_items;
             SpaceView.ItemsSource = space_items;
+
+            initializePasswordView();
         }
 
         //private void draw_password(bool check = false)
@@ -221,11 +224,18 @@ namespace uKeepIt
             catch (Exception) { MessageBox.Show("Unable to open the folder (with Windows Explorer). Does the folder exist?"); }
         }
 
-        private void password_set_button_click(object sender, RoutedEventArgs e)
+        private void SetPassword_Click(object sender, RoutedEventArgs e)
         {
-            var pw1 = pw_input1.Text;
-            var pw2 = pw_input2.Text;
+            var pw1 = (uiPasswordWrapper.Template.FindName("password_input1", uiPasswordWrapper) as TextBox).Text;
+            var pw2 = (uiPasswordWrapper.Template.FindName("password_input2", uiPasswordWrapper) as TextBox).Text;
             set_password(pw1, pw2);
+        }
+
+        private void initializePasswordView()
+        {
+            uiPasswordWrapper.Template = (_config.key.Item2 == null) ?
+                FindResource("uiPasswordNotSetTemplate") as ControlTemplate :
+                FindResource("uiPasswordSetTemplate") as ControlTemplate;
         }
 
         private bool set_password(string pw1, string pw2)
@@ -243,16 +253,16 @@ namespace uKeepIt
             }
 
             _config.changeKey(pw1);
-            //draw_password();
+            initializePasswordView();
             return true;
         }
 
-        private void password_check_button_click(object sender, RoutedEventArgs e)
+        private void VerifyPassword_Click(object sender, RoutedEventArgs e)
         {
-            var pw = pw_input_check.Text;
+            var pw = (uiPasswordWrapper.Template.FindName("password_input_verify", uiPasswordWrapper) as TextBox).Text;
             if (_config.invalidateKey(pw))
             {
-                //draw_password();
+                uiPasswordWrapper.Template = FindResource("uiPasswordNotSetTemplate") as ControlTemplate;
             }
             else
             {
@@ -260,15 +270,14 @@ namespace uKeepIt
             }
         }
 
-        private void password_change_button_click(object sender, RoutedEventArgs e)
+        private void ChangePassword_Click(object sender, RoutedEventArgs e)
         {
-            //draw_password(true);
+            uiPasswordWrapper.Template = FindResource("uiPasswordVerifyTemplate") as ControlTemplate;
         }
 
         private void StoreAdd_Click(object sender, RoutedEventArgs e)
         {
             add_store(choose_folder());
-            //draw_stores();
         }
 
         void StoreDelete_Click(object sender, RoutedEventArgs e)
@@ -277,7 +286,6 @@ namespace uKeepIt
             {
                 var to_remove = ((Button)sender).Tag as string;
                 remove_store(to_remove as String);
-                //draw_stores();
             }
         }
 
@@ -286,18 +294,17 @@ namespace uKeepIt
             var target = choose_folder();
             if (target != "")
                 add_space(target);
-            //draw_spaces();
         }
 
-        private void space_remove_button_click(object sender, RoutedEventArgs e)
+        private void SpaceRemove_Click(object sender, RoutedEventArgs e)
         {
             var to_remove = ((Button)sender).Tag as string;
             _config.removeSpace(to_remove);
             execute(_config.addSpace(to_remove, _config._default_folder));
-            //draw_spaces();
+            loadSpaces();
         }
 
-        private void space_checkout_button_click(object sender, RoutedEventArgs e)
+        private void SpaceCheckout_Click(object sender, RoutedEventArgs e)
         {
             var to_checkout = (sender as Button).Tag as string;
             var target_location = choose_folder();
@@ -305,13 +312,13 @@ namespace uKeepIt
             checkout_space(to_checkout, target_location);
         }
 
-        private void space_delete_button_click(object sender, RoutedEventArgs e)
+        private void SpaceDelete_Click(object sender, RoutedEventArgs e)
         {
             if (confirm_action("remove space permanently ?"))
             {
                 var to_remove = ((Button)sender).Tag as string;
                 execute(_config.removeSpace(to_remove, true));
-                //draw_spaces();
+                loadSpaces();
             }
         }
 
@@ -327,35 +334,32 @@ namespace uKeepIt
 
             execute(_config.addStore(name, folder));
             loadStores();
-            //draw_spaces();
         }
 
         private void remove_store(string name)
         {
             execute(_config.removeStore(name));
             loadStores();
-            //draw_stores();
         }
 
         private void add_space(string folder)
         {
             string name = folder.Replace(System.IO.Path.GetDirectoryName(folder) + "\\", "");
             execute(_config.addSpace(name, folder));
-            //draw_spaces();
             loadSpaces();
         }
 
         private void remove_space(string name)
         {
             execute(_config.removeSpace(name));
-            //draw_spaces();
+            loadSpaces();
         }
 
         private void checkout_space(string name, string target_location)
         {
             _config.removeSpace(name);
             execute(_config.addSpace(name, target_location));
-            //draw_spaces();
+            loadSpaces();
         }
 
         private void quit_btn_click(object sender, RoutedEventArgs e)
@@ -381,14 +385,14 @@ namespace uKeepIt
     //    public static readonly RoutedUICommand Delete = new RoutedUICommand("Delete Store", "Delete", typeof(StoreCommands), null);
     //}
 
-    public static class SpaceTemplateSelector
+    public class SpaceTemplateSelector: DataTemplateSelector
     {
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
             var element = container as FrameworkElement;
             var space = item as SpaceItem;
 
-            if (!space.Path.Equals(""))
+            if (!space.Path.Equals("") && !space.Path.Equals("--"))
             {
                 return element.FindResource("SpaceCheckedoutTemplate") as DataTemplate;
             }
@@ -396,6 +400,16 @@ namespace uKeepIt
             {
                 return element.FindResource("SpaceNotCheckedoutTemplate") as DataTemplate;
             }
+        }
+    }
+
+    public class PasswordTemplateSelector : DataTemplateSelector
+    {
+        public override DataTemplate SelectTemplate(object item, DependencyObject container)
+        {
+            var element = container as FrameworkElement;
+
+            return null;
         }
     }
 }

@@ -1,52 +1,67 @@
 ﻿<Window x:Class="uKeepIt.ConfigurationWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:self="clr-namespace:uKeepIt;assembly=uKeepIt"
-        Title="uKeepIt" Height="554" Width="525">
-    
+        xmlns:self="clr-namespace:uKeepIt"
+        Title="uKeepIt" Height="510" Width="523" SizeToContent="Height">
+
     <Window.Resources>
 
-        <!--<self:SpaceTemplateSelector x:Key="spaceTemplateSelector"/>-->
+        <self:SpaceTemplateSelector x:Key="spaceTemplateSelector"/>
+        <self:PasswordTemplateSelector x:Key="passwordTemplateSelector"/>
 
-        <DataTemplate x:Key="SpaceNotCheckedoutTemplate">
+        <ControlTemplate x:Key="uiPasswordSetTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Name}"/>
-                <TextBlock Text="{Binding Path}" Grid.Column="1"/>
-                <Button x:Name="SpaceCheckout" Click="SpaceCheckout_Click" Tag="{Binding Name}"  Grid.Column="2" Content="Checkout"/>
-                <Button x:Name="SpaceDelete" Click="SpaceDelete_Click" Tag="{Binding Name}"  Grid.Column="3" Content="Delete"/>
+                <TextBlock><Run Text="Password already set"/></TextBlock>
+                <Button Click="ChangePassword_Click" Content="Change Password" Width="Auto"/>
             </Grid>
-        </DataTemplate>
-        
-        <DataTemplate x:Key="SpaceCheckedoutTemplate">
+        </ControlTemplate>
+        <ControlTemplate x:Key="uiPasswordNotSetTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Name}"/>
-                <TextBlock Text="{Binding Path}" Grid.Column="1"/>
-                <Button x:Name="SpaceRemove" Click="SpaceRemove_Click" Tag="{Binding Name}"  Grid.Column="2" Content="Remove locally"/>
+                <TextBox x:Name="password_input1" Grid.Column="0"/>
+                <TextBox x:Name="password_input2" Grid.Column="1"/>
+                <Button Click="SetPassword_Click" Grid.Column="2" Content="Set Password" Width="Auto"/>
             </Grid>
-        </DataTemplate>
-        
+        </ControlTemplate>
+        <ControlTemplate x:Key="uiPasswordVerifyTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="password_input_verify" />
+                <Button Click="VerifyPassword_Click" Content="Verify Password" Width="Auto" Grid.Column="1"/>
+            </Grid>
+        </ControlTemplate>
+
     </Window.Resources>
-    
+
     <Grid x:Name="maingrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*" MinHeight="30"/>
+            <RowDefinition Height="Auto" MinHeight="100"/>
+            <RowDefinition Height="Auto" MinHeight="100"/>
+            <RowDefinition Height="*" MinHeight="20"/>
+        </Grid.RowDefinitions>
         <Label Content="Master Password" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="26" Width="100" Padding="5"/>
-        <Label Content="Clouds" Margin="10,76,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Height="26" Width="46"/>
-        <Button x:Name="done_button" Content="Done" Margin="0,0,71,10" Click="done_button_click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="10,5" Height="28" Width="51"/>
-        <Button x:Name="StoreAdd" Content="Add" Click="StoreAdd_Click" Padding="10,5" Margin="10,218,0,0" Height="28" VerticalAlignment="Top" HorizontalAlignment="Left" Width="77"/>
-        <Label Content="Folders" HorizontalAlignment="Left" Margin="10,251,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="SpaceAdd" Content="Add" HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="SpaceAdd_Click" Padding="10,5" Margin="10,0,0,28" Height="30" Width="77"/>
-        <Button x:Name="quit_btn" Content="Quit" Margin="0,0,10,10" Click="quit_btn_click" Height="28" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="56"/>
-        <ItemsControl x:Name="StoreView" HorizontalAlignment="Left" Height="111" Margin="10,102,0,0" VerticalAlignment="Top" Width="497">
+        <Grid Margin="10,36,10,10" >
+            <Control x:Name="uiPasswordWrapper" Height="Auto" />
+        </Grid>
+        <Label Content="Clouds" Margin="10,16,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Height="26" Width="46" Grid.Row="1"/>
+        <Button x:Name="done_button" Content="Done" Margin="0,0,71,10" Click="done_button_click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="10,5" Height="28" Width="51" Grid.Row="3"/>
+        <Button x:Name="StoreAdd" Content="Add" Click="StoreAdd_Click" Padding="10,5" Margin="10,0,0,10" HorizontalAlignment="Left" Width="77" Grid.Row="1" Height="28" VerticalAlignment="Bottom"/>
+        <Label Content="Folders" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Row="2" Height="26" Width="48"/>
+        <Button Content="Add" HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="SpaceAdd_Click" Padding="10,5" Margin="10,0,0,10" Height="30" Width="77" Grid.Row="2"/>
+        <Button Content="Quit" Margin="0,0,10,10" Click="quit_btn_click" Height="28" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="56" Grid.Row="3"/>
+        <ItemsControl x:Name="StoreView" Height="0" MinHeight="100" Margin="10,42,0,0" VerticalAlignment="Top" Width="Auto" Grid.Row="1">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Grid>
@@ -62,8 +77,37 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <ItemsControl x:Name="SpaceView" HorizontalAlignment="Left" Height="178" Margin="10,282,0,0" VerticalAlignment="Top" Width="497"
-                      ItemTemplateSelector="{StaticResource spaceTemplateSelector}">
-        </ItemsControl>
+        <ListView x:Name="SpaceView" HorizontalAlignment="Left" Margin="10,41,0,45" Width="497" MinHeight="100"
+                      ItemTemplateSelector="{StaticResource spaceTemplateSelector}" Grid.Row="2">
+            <ListView.Resources>
+                <DataTemplate x:Key="SpaceNotCheckedoutTemplate">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Name}"/>
+                        <TextBlock Text="{Binding Path}" Grid.Column="1"/>
+                        <Button x:Name="SpaceCheckout" Click="SpaceCheckout_Click" Tag="{Binding Name}"  Grid.Column="2" Content="Checkout"/>
+                        <Button x:Name="SpaceDelete" Click="SpaceDelete_Click" Tag="{Binding Name}"  Grid.Column="3" Content="Delete"/>
+                    </Grid>
+                </DataTemplate>
+
+                <DataTemplate x:Key="SpaceCheckedoutTemplate">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Name}"/>
+                        <TextBlock Text="{Binding Path}" Grid.Column="1"/>
+                        <Button x:Name="SpaceRemove" Click="SpaceRemove_Click" Tag="{Binding Name}"  Grid.Column="2" Content="Remove locally"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.Resources>
+        </ListView>
     </Grid>
 </Window>
