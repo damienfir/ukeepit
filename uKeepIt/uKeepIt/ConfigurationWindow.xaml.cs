@@ -20,12 +20,9 @@ namespace uKeepIt
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class ConfigurationWindow : Window
+    public partial class ConfigurationWindow
     {
         private Configuration _config;
-        private TextBox pw_input1;
-        private TextBox pw_input2;
-        private TextBox pw_input_check;
 
         private ObservableCollection<StoreItem> store_items;
         private ObservableCollection<SpaceItem> space_items;
@@ -51,78 +48,6 @@ namespace uKeepIt
             initializePasswordView();
         }
 
-        //private void draw_password(bool check = false)
-        //{
-        //    var name = "pwgrid";
-        //    Grid grid = (Grid)maingrid.FindName(name);
-        //    if (grid == null)
-        //    {
-        //        grid = new Grid();
-        //        grid.Name = name;
-        //        maingrid.RegisterName(name, grid);
-        //        Grid.SetColumn(grid, 1);
-        //        maingrid.Children.Add(grid);
-        //    }
-        //    else
-        //    {
-        //        grid.Children.Clear();
-        //        grid.ColumnDefinitions.Clear();
-        //        grid.RowDefinitions.Clear();
-        //    }
-
-        //    if (check)
-        //    {
-        //        grid.ColumnDefinitions.Add(new ColumnDefinition());
-        //        grid.ColumnDefinitions.Add(new ColumnDefinition());
-
-        //        pw_input_check = new TextBox();
-        //        Grid.SetColumn(pw_input_check, 0);
-        //        grid.Children.Add(pw_input_check);
-
-        //        var btn_check = new Button();
-        //        btn_check.Content = "Verify";
-        //        btn_check.Click += password_check_button_click;
-        //        Grid.SetColumn(btn_check, 1);
-        //        grid.Children.Add(btn_check);
-        //    }
-        //    else if (_config.getKey() == null)
-        //    {
-        //        grid.ColumnDefinitions.Add(new ColumnDefinition());
-        //        grid.ColumnDefinitions.Add(new ColumnDefinition());
-        //        grid.RowDefinitions.Add(new RowDefinition());
-        //        grid.RowDefinitions.Add(new RowDefinition());
-
-        //        pw_input1 = new TextBox();
-        //        Grid.SetRow(pw_input1, 0);
-        //        grid.Children.Add(pw_input1);
-
-        //        pw_input2 = new TextBox();
-        //        Grid.SetRow(pw_input2, 1);
-        //        grid.Children.Add(pw_input2);
-
-        //        var btn_set = new Button();
-        //        btn_set.Content = "Set";
-        //        btn_set.Click += password_set_button_click;
-        //        Grid.SetColumn(btn_set, 1);
-        //        grid.Children.Add(btn_set);
-        //    }
-        //    else
-        //    {
-        //        grid.ColumnDefinitions.Add(new ColumnDefinition());
-
-        //        var label = new Label();
-        //        label.Content = "password already set";
-        //        grid.Children.Add(label);
-
-        //        var btn_change = new Button();
-        //        btn_change.Content = "Change";
-        //        btn_change.Click += password_change_button_click;
-        //        Grid.SetColumn(btn_change, 1);
-
-        //        grid.Children.Add(btn_change);
-        //    }
-        //}
-
         private void loadStores()
         {
             store_items.Clear();
@@ -140,57 +65,6 @@ namespace uKeepIt
                 space_items.Add(new SpaceItem() { Name = store.Key, Path = store.Value.folder });
             }
         }
-        //private void draw_spaces()
-        //{
-        //    folders_stack.Children.Clear();
-        //    foreach (var space in _config.spaces)
-        //    {
-        //        var grid = new Grid();
-        //        grid.ColumnDefinitions.Add(new ColumnDefinition());
-        //        grid.ColumnDefinitions.Add(new ColumnDefinition());
-        //        grid.ColumnDefinitions.Add(new ColumnDefinition());
-
-        //        var label = new Label();
-        //        label.Content = space.Key;
-        //        Grid.SetColumn(label, 0);
-        //        grid.Children.Add(label);
-
-        //        var label2 = new Label();
-        //        label2.Content = space.Value.folder;
-        //        Grid.SetColumn(label2, 1);
-        //        grid.Children.Add(label2);
-
-        //        if (space.Value.folder != _config._default_folder)
-        //        {
-        //            var remove_btn = new Button();
-        //            remove_btn.Content = "remove locally";
-        //            remove_btn.Tag = space.Key;
-        //            remove_btn.Click += space_remove_button_click;
-        //            Grid.SetColumn(remove_btn, 2);
-        //            grid.Children.Add(remove_btn);
-        //        }
-        //        else
-        //        {
-        //            var checkout_btn = new Button();
-        //            checkout_btn.Content = "checkout";
-        //            checkout_btn.Tag = space.Key;
-        //            checkout_btn.Click += space_checkout_button_click;
-        //            Grid.SetColumn(checkout_btn, 2);
-        //            grid.Children.Add(checkout_btn);
-
-        //            grid.ColumnDefinitions.Add(new ColumnDefinition());
-
-        //            var delete_btn = new Button();
-        //            delete_btn.Content = "delete permanently";
-        //            delete_btn.Tag = space.Key;
-        //            delete_btn.Click += space_delete_button_click;
-        //            Grid.SetColumn(delete_btn, 3);
-        //            grid.Children.Add(delete_btn);
-        //        }
-
-        //        folders_stack.Children.Add(grid);
-        //    }
-        //}
 
         bool confirm_action(string message)
         {
@@ -203,7 +77,6 @@ namespace uKeepIt
         {
             if (success)
             {
-                _config.reloadContext();
                 _config.writeConfig();
             }
         }
@@ -216,29 +89,21 @@ namespace uKeepIt
             return dialog.SelectedPath;
         }
 
-        private void show_click(object sender, RoutedEventArgs e)
-        {
-            var btn = sender as MenuItem;
-            var folder = btn.Tag as string;
-            try { System.Diagnostics.Process.Start(folder); }
-            catch (Exception) { MessageBox.Show("Unable to open the folder (with Windows Explorer). Does the folder exist?"); }
-        }
-
         private void SetPassword_Click(object sender, RoutedEventArgs e)
         {
             var pw1 = (uiPasswordWrapper.Template.FindName("password_input1", uiPasswordWrapper) as TextBox).Text;
             var pw2 = (uiPasswordWrapper.Template.FindName("password_input2", uiPasswordWrapper) as TextBox).Text;
-            set_password(pw1, pw2);
+            setPassword(pw1, pw2);
         }
 
         private void initializePasswordView()
         {
             uiPasswordWrapper.Template = (_config.key.Item2 == null) ?
-                FindResource("uiPasswordNotSetTemplate") as ControlTemplate :
-                FindResource("uiPasswordSetTemplate") as ControlTemplate;
+                uiPasswordWrapper.FindResource("uiPasswordNotSetTemplate") as ControlTemplate :
+                uiPasswordWrapper.FindResource("uiPasswordSetTemplate") as ControlTemplate;
         }
 
-        private bool set_password(string pw1, string pw2)
+        private bool setPassword(string pw1, string pw2)
         {
             if (pw1.Equals(""))
             {
@@ -262,7 +127,7 @@ namespace uKeepIt
             var pw = (uiPasswordWrapper.Template.FindName("password_input_verify", uiPasswordWrapper) as TextBox).Text;
             if (_config.invalidateKey(pw))
             {
-                uiPasswordWrapper.Template = FindResource("uiPasswordNotSetTemplate") as ControlTemplate;
+                uiPasswordWrapper.Template = uiPasswordWrapper.FindResource("uiPasswordNotSetTemplate") as ControlTemplate;
             }
             else
             {
@@ -272,12 +137,23 @@ namespace uKeepIt
 
         private void ChangePassword_Click(object sender, RoutedEventArgs e)
         {
-            uiPasswordWrapper.Template = FindResource("uiPasswordVerifyTemplate") as ControlTemplate;
+            uiPasswordWrapper.Template = uiPasswordWrapper.FindResource("uiPasswordVerifyTemplate") as ControlTemplate;
         }
 
         private void StoreAdd_Click(object sender, RoutedEventArgs e)
         {
-            add_store(choose_folder());
+            string requestedPath = choose_folder();
+            if (checkPath(requestedPath))
+            {
+                add_store(requestedPath);
+                loadStores();
+            }
+        }
+
+        private bool checkPath(string requestedPath)
+        {
+            return !requestedPath.Equals("");
+            // check writable, etc ...
         }
 
         void StoreDelete_Click(object sender, RoutedEventArgs e)
@@ -286,14 +162,23 @@ namespace uKeepIt
             {
                 var to_remove = ((Button)sender).Tag as string;
                 remove_store(to_remove as String);
+                loadStores();
             }
+        }
+
+        private void SpaceShow_Click(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private void SpaceAdd_Click(object sender, RoutedEventArgs e)
         {
             var target = choose_folder();
             if (target != "")
+            {
                 add_space(target);
+                loadSpaces();
+            }
         }
 
         private void SpaceRemove_Click(object sender, RoutedEventArgs e)
@@ -310,6 +195,7 @@ namespace uKeepIt
             var target_location = choose_folder();
 
             checkout_space(to_checkout, target_location);
+            loadSpaces();
         }
 
         private void SpaceDelete_Click(object sender, RoutedEventArgs e)
@@ -325,6 +211,7 @@ namespace uKeepIt
         private void done_button_click(object sender, RoutedEventArgs e)
         {
             Hide();
+            _config.reloadContext();
         }
 
         private void add_store(string folder)
@@ -333,33 +220,28 @@ namespace uKeepIt
             folder += @"\ukeepit";
 
             execute(_config.addStore(name, folder));
-            loadStores();
         }
 
         private void remove_store(string name)
         {
             execute(_config.removeStore(name));
-            loadStores();
         }
 
         private void add_space(string folder)
         {
             string name = folder.Replace(System.IO.Path.GetDirectoryName(folder) + "\\", "");
             execute(_config.addSpace(name, folder));
-            loadSpaces();
         }
 
         private void remove_space(string name)
         {
             execute(_config.removeSpace(name));
-            loadSpaces();
         }
 
         private void checkout_space(string name, string target_location)
         {
             _config.removeSpace(name);
             execute(_config.addSpace(name, target_location));
-            loadSpaces();
         }
 
         private void quit_btn_click(object sender, RoutedEventArgs e)
@@ -380,10 +262,6 @@ namespace uKeepIt
         public string Path { get; set; }
     }
 
-    //public static class StoreCommands
-    //{
-    //    public static readonly RoutedUICommand Delete = new RoutedUICommand("Delete Store", "Delete", typeof(StoreCommands), null);
-    //}
 
     public class SpaceTemplateSelector: DataTemplateSelector
     {
@@ -400,16 +278,6 @@ namespace uKeepIt
             {
                 return element.FindResource("SpaceNotCheckedoutTemplate") as DataTemplate;
             }
-        }
-    }
-
-    public class PasswordTemplateSelector : DataTemplateSelector
-    {
-        public override DataTemplate SelectTemplate(object item, DependencyObject container)
-        {
-            var element = container as FrameworkElement;
-
-            return null;
         }
     }
 }

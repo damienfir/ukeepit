@@ -27,6 +27,11 @@ namespace uKeepIt
             folders.ForEach(x => x.watch());
         }
 
+        public void unWatchFolders()
+        {
+            folders.ForEach(x => x.unwatch());
+        }
+
         public void reloadKey(byte[] keybytes)
         {
             previous_key = key;
@@ -43,6 +48,7 @@ namespace uKeepIt
 
         public void reloadObjectStore(Dictionary<string, Store> stores_dict)
         {
+
             stores.Clear();
 
             var objectStores = new List<ObjectStore>();
@@ -58,7 +64,6 @@ namespace uKeepIt
 
         public void reloadSpaces(Dictionary<string, Space> spaces_dict)
         {
-            folders.ForEach(x => x.unwatch());
             folders.Clear();
 
             foreach (var space in spaces_dict)

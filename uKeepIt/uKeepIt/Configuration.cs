@@ -42,9 +42,11 @@ namespace uKeepIt
 
         public void reloadContext()
         {
+            _context.unWatchFolders();
             _context.reloadKey(key.Item2);
             _context.reloadObjectStore(stores);
             _context.reloadSpaces(spaces.Where(x => x.Value.folder != _default_folder).ToDictionary(e => e.Key, e => e.Value));
+            _context.watchFolders();
             _context.synchronize();
         }
 

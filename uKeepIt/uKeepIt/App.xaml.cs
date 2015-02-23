@@ -24,8 +24,6 @@ namespace uKeepIt
             config = new Configuration(context);
             configwindow = new ConfigurationWindow(config);
             notification = new NotificationMenu(configwindow);
-
-            context.watchFolders();
         }
     }
 }

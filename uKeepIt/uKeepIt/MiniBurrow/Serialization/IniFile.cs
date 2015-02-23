@@ -53,6 +53,7 @@ namespace uKeepIt.MiniBurrow.Serialization
                 if (pos < 0) continue;
                 var key = line.Substring(0, pos).Trim();
                 var value = line.Substring(pos + 1).Trim();
+                if (value.Length == 0) continue;
                 if (value[0] == '"' && value[value.Length - 1] == '"' && value.Length >= 2) value = value.Substring(1, value.Length - 2);
                 section.Set(key, unescape.Replace(value, UnescapeChar));
             }

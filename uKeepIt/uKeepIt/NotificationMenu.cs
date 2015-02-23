@@ -31,12 +31,12 @@ namespace uKeepIt
                 Visible = true
             };
 
-            _icon.Click += _icon_Click;
+            _icon.Click += icon_Click;
 
             showConfig();
         }
 
-        void _icon_Click(object sender, EventArgs e)
+        void icon_Click(object sender, EventArgs e)
         {
             MouseEventArgs a = e as MouseEventArgs;
             if (a.Button != MouseButtons.Right)
