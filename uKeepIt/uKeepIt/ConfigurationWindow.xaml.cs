@@ -229,8 +229,7 @@ namespace uKeepIt
 
         private void add_space(string folder)
         {
-            string name = folder.Replace(System.IO.Path.GetDirectoryName(folder) + "\\", "");
-            execute(_config.addSpace(name, folder));
+            execute(_config.addSpace(folder));
         }
 
         private void remove_space(string name)

@@ -106,6 +106,7 @@
     <Compile Include="MiniBurrow\Serialization\ObjectHeader.cs" />
     <Compile Include="MiniBurrow\Serialization\Text.cs" />
     <Compile Include="MiniBurrow\Static.cs" />
+    <Compile Include="SetRegistry.cs" />
     <Compile Include="Space.cs" />
     <Compile Include="SpaceEditor.cs" />
     <Compile Include="SynchronizedFolder.cs" />

@@ -25,6 +25,9 @@ namespace uKeepIt
         private readonly string _path_key = "path";
         public readonly string _default_folder = "--";
 
+
+        public Configuration() : this(null) { }
+
         public Configuration(Context context)
         {
             _context = context;
@@ -37,17 +40,19 @@ namespace uKeepIt
             spaces = new Dictionary<string, Space>();
 
             readConfig();
-            //reloadContext();
         }
 
         public void reloadContext()
         {
-            _context.unWatchFolders();
-            _context.reloadKey(key.Item2);
-            _context.reloadObjectStore(stores);
-            _context.reloadSpaces(spaces.Where(x => x.Value.folder != _default_folder).ToDictionary(e => e.Key, e => e.Value));
-            _context.watchFolders();
-            _context.synchronize();
+            if (_context != null)
+            {
+                _context.unWatchFolders();
+                _context.reloadKey(key.Item2);
+                _context.reloadObjectStore(stores);
+                _context.reloadSpaces(spaces.Where(x => x.Value.folder != _default_folder).ToDictionary(e => e.Key, e => e.Value));
+                _context.watchFolders();
+                _context.synchronize();
+            }
         }
 
         public bool addStore(string name, string location)
@@ -77,6 +82,12 @@ namespace uKeepIt
 
             spaces.Add(name, new Space(name, location));
             return true;
+        }
+
+        public bool addSpace(string folder)
+        {
+            string name = folder.Replace(System.IO.Path.GetDirectoryName(folder) + "\\", "");
+            return addSpace(name, folder);
         }
 
         public bool removeSpace(string name, bool delete_folder = false)
@@ -163,7 +174,8 @@ namespace uKeepIt
         internal void changeKey(string pw)
         {
             key = Tuple.Create(key.Item1, AESKey.generateKey(pw));
-            _context.reloadKey(key.Item2);
+            if (_context != null)
+                _context.reloadKey(key.Item2);
             AESKey.storeKey(key.Item2, key.Item1);
         }
     }
