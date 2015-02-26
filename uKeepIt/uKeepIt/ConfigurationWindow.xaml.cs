@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Collections.ObjectModel;
+using System.Windows.Controls.Primitives;
 
 namespace uKeepIt
 {
@@ -23,6 +24,7 @@ namespace uKeepIt
     public partial class ConfigurationWindow
     {
         private Configuration _config;
+        public delegate void ConfigWatcher();
 
         private ObservableCollection<StoreItem> store_items;
         private ObservableCollection<SpaceItem> space_items;
@@ -30,6 +32,7 @@ namespace uKeepIt
         public ConfigurationWindow(Configuration config)
         {
             this._config = config;
+            _config.registerOnChanged(this);
 
             InitializeComponent();
             //App.Configuration.Reloaded += BurrowConfiguration_Reloaded;
@@ -46,6 +49,18 @@ namespace uKeepIt
             SpaceView.ItemsSource = space_items;
 
             initializePasswordView();
+        }
+
+        public void notify()
+        {
+            var del = new ConfigWatcher(notifyChange);
+            Application.Current.Dispatcher.BeginInvoke(del, null);
+        }
+
+        public void notifyChange()
+        {
+            loadStores();
+            loadSpaces();
         }
 
         private void loadStores()
@@ -98,9 +113,14 @@ namespace uKeepIt
 
         private void initializePasswordView()
         {
-            uiPasswordWrapper.Template = (_config.key.Item2 == null) ?
-                uiPasswordWrapper.FindResource("uiPasswordNotSetTemplate") as ControlTemplate :
-                uiPasswordWrapper.FindResource("uiPasswordSetTemplate") as ControlTemplate;
+            if (_config.key.Item2 == null)
+            {
+                changePasswordTemplate("uiPasswordNotSetTemplate", false);
+            }
+            else
+            {
+                changePasswordTemplate("uiPasswordSetTemplate");
+            }
         }
 
         private bool setPassword(string pw1, string pw2)
@@ -127,7 +147,7 @@ namespace uKeepIt
             var pw = (uiPasswordWrapper.Template.FindName("password_input_verify", uiPasswordWrapper) as TextBox).Text;
             if (_config.invalidateKey(pw))
             {
-                uiPasswordWrapper.Template = uiPasswordWrapper.FindResource("uiPasswordNotSetTemplate") as ControlTemplate;
+                changePasswordTemplate("uiPasswordNotSetTemplate");
             }
             else
             {
@@ -135,9 +155,24 @@ namespace uKeepIt
             }
         }
 
+        private void changePasswordTemplate(string template, bool withCancel = true)
+        {
+            uiPasswordWrapper.Template = uiPasswordWrapper.FindResource(template) as ControlTemplate;
+            if (!withCancel)
+            {
+                Button cancelButton = uiPasswordWrapper.FindName("CancelPasswordButton") as Button;
+                if (cancelButton != null) (cancelButton.Parent as UniformGrid).Children.Remove(cancelButton);
+            }
+        }
+
+        private void CancelPassword_Click(object sender, RoutedEventArgs e)
+        {
+            initializePasswordView();
+        }
+
         private void ChangePassword_Click(object sender, RoutedEventArgs e)
         {
-            uiPasswordWrapper.Template = uiPasswordWrapper.FindResource("uiPasswordVerifyTemplate") as ControlTemplate;
+            changePasswordTemplate("uiPasswordVerifyTemplate");
         }
 
         private void StoreAdd_Click(object sender, RoutedEventArgs e)
@@ -247,6 +282,7 @@ namespace uKeepIt
         {
             System.Windows.Application.Current.Shutdown();
         }
+
     }
 
     public class StoreItem

@@ -50,17 +50,30 @@
                         </UniformGrid>
                     </ControlTemplate>
                     <ControlTemplate x:Key="uiPasswordNotSetTemplate">
-                        <UniformGrid Columns="3">
-                            <TextBox x:Name="password_input1" Controls:TextBoxHelper.Watermark="Enter new password"/>
-                            <TextBox x:Name="password_input2" Controls:TextBoxHelper.Watermark="Enter password again"/>
-                            <Button Click="SetPassword_Click" Content="Set Password" Width="Auto" HorizontalAlignment="Right"/>
-                        </UniformGrid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" x:Name="password_input1" Controls:TextBoxHelper.Watermark="Enter password" Margin="0,0,5,0"/>
+                            <TextBox Grid.Column="1" x:Name="password_input2" Controls:TextBoxHelper.Watermark="Enter again" Margin="0,0,5,0"/>
+                            <Button Grid.Column="2" Click="CancelPassword_Click" x:Name="CancelPasswordButton" Content="Cancel" Width="Auto" HorizontalAlignment="Right" Margin="5,0,0,0"/>
+                            <Button Grid.Column="3" Click="SetPassword_Click" Content="Set Password" Width="Auto" HorizontalAlignment="Right" Margin="5,0,0,0"/>
+                        </Grid>
                     </ControlTemplate>
                     <ControlTemplate x:Key="uiPasswordVerifyTemplate">
-                        <UniformGrid Columns="2">
-                            <TextBox x:Name="password_input_verify" Controls:TextBoxHelper.Watermark="Enter current password"/>
-                            <Button Click="VerifyPassword_Click" Content="Verify Password" Width="Auto" HorizontalAlignment="Right"/>
-                        </UniformGrid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" x:Name="password_input_verify" Controls:TextBoxHelper.Watermark="Enter current password" Margin="0,0,5,0"/>
+                            <Button Grid.Column="1" Click="CancelPassword_Click" x:Name="CancelPasswordButton" Content="Cancel" Width="Auto" HorizontalAlignment="Right" Margin="5,0,0,0"/>
+                            <Button Grid.Column="2" Click="VerifyPassword_Click" Content="Verify Password" Width="Auto" HorizontalAlignment="Right" Margin="5,0,0,0"/>
+                        </Grid>
                     </ControlTemplate>
                 </Control.Resources>
             </Control>

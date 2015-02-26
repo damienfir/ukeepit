@@ -31,9 +31,9 @@ namespace uKeepIt
             base.OnStartup(e);
             var args = e.Args;
 
-            if (args.Length > 1)
+            if (args.Length > 0)
             {
-                var folder = args[1];
+                var folder = args[0];
                 config = new Configuration();
                 config.addSpace(folder);
                 config.writeConfig();
@@ -41,14 +41,17 @@ namespace uKeepIt
             }
             else
             {
-                if (!SetRegistry.register())
-                {
+                //if (!SetRegistry.register())
+                //{
+                    //MessageBox.Show("launching", "");
                     launch();
-                }
-                else
-                {
-                    Application.Current.Shutdown();
-                }
+                //}
+                //else
+                //{
+                //    //MessageBox.Show("shutting down", "");
+                //    Environment.Exit(0);
+                //    Application.Current.Shutdown();
+                //}
             }
         }
     }

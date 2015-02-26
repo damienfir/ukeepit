@@ -13,26 +13,6 @@ namespace uKeepIt
     /// </summary>
     public static class SetRegistry
     {
-        public static readonly string SetRegistryCommandLineArg = "-ConfigRegistryRightClickHandler";
-        public static readonly string CommandName = "Search and Replace";
-
-        public static bool CheckCommandLineArgs(string[] args)
-        {
-            bool registryProcessed = false;
-            if (args != null && args.Length == 2 && args[0].Equals(SetRegistryCommandLineArg))
-            {
-                try
-                {
-                    System.IO.File.AppendAllText("COMMANDLINE_JSearchAndReplace.txt", string.Format("{0} : {1}\n", DateTime.Now.ToString(), string.Join(" ", args)));
-                }
-                finally
-                {
-                    registryProcessed = true;
-                }
-            }
-
-            return registryProcessed;
-        }
 
         public static bool StartProcessElevatedPrivileges()
         {
@@ -60,23 +40,20 @@ namespace uKeepIt
 
         public static bool register()
         {
+            string menuName = "Add to ukeepit";
             try
             {
                 var directoryKey = Registry.ClassesRoot.OpenSubKey("Directory");
                 var shellKey = directoryKey.OpenSubKey("shell", true);
 
-                var regKey = shellKey.OpenSubKey("ukeepit", true);
+                var regKey = shellKey.OpenSubKey(menuName, true);
                 if (regKey == null) {
-                    regKey = shellKey.CreateSubKey("ukeepit");
-                    regKey.Close();
-                    regKey = shellKey.OpenSubKey("ukeepit", true);
+                    regKey = shellKey.CreateSubKey(menuName);
                 }
-                    
+                
                 var commandKey = regKey.OpenSubKey("command", true);
                 if (commandKey == null) {
                     commandKey = regKey.CreateSubKey("command");
-                    commandKey.Close();
-                    commandKey = regKey.OpenSubKey("command");
                 }
 
                 var commandValue = commandKey.GetValue(null);

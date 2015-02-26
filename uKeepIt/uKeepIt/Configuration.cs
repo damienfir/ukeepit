@@ -6,6 +6,7 @@ using uKeepIt.MiniBurrow.Folder;
 using uKeepIt.MiniBurrow.Serialization;
 using uKeepIt.MiniBurrow;
 using System.IO;
+using System.Threading;
 
 namespace uKeepIt
 {
@@ -13,6 +14,8 @@ namespace uKeepIt
     {
         public readonly string _location;
         public readonly string _default_key_location;
+        private FileSystemWatcher watcher;
+        private ConfigurationWindow onChangedCallback;
 
         private Context _context;
         public Tuple<string, byte[]> key;
@@ -23,7 +26,7 @@ namespace uKeepIt
         private readonly string _space_section = "space";
         private readonly string _key_section = "key";
         private readonly string _path_key = "path";
-        public readonly string _default_folder = "--";
+        public readonly string _default_folder = "";
 
 
         public Configuration() : this(null) { }
@@ -31,15 +34,51 @@ namespace uKeepIt
         public Configuration(Context context)
         {
             _context = context;
-            //var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            //Folder = appDataFolder + "\\ukeepit";
-            _location = @"C:\Users\damien\Documents\ukeepit\test\config\configuration";
-            _default_key_location = @"C:\Users\damien\Documents\ukeepit\test\config\key";
+            var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\ukeepit";
+            if (!Directory.Exists(appDataFolder))
+            {
+                Directory.CreateDirectory(appDataFolder);
+            }
+
+            _location = appDataFolder + "\\conf.ini";
+            _default_key_location = appDataFolder + "\\key.data";
 
             stores = new Dictionary<string, Store>();
             spaces = new Dictionary<string, Space>();
+            key = Tuple.Create<string, byte[]>(_default_key_location, null);
+
+            if (_context != null)
+            {
+                var directory = Path.GetDirectoryName(_location);
+                var filename = Path.GetFileName(_location);
+                watcher = new FileSystemWatcher(directory, filename);
+                watcher.EnableRaisingEvents = true;
+                watcher.Changed += watcher_Changed;
+            }
 
             readConfig();
+        }
+
+        void watcher_Changed(object sender, FileSystemEventArgs e)
+        {
+            // try to read until file is available to read
+
+            int tries = 0;
+            while (true)
+            {
+                ++tries;
+                try
+                {
+                    readConfig();
+                    onChangedCallback.notify();
+                    break;
+                }
+                catch (IOException)
+                {
+                    Thread.Sleep(100);
+                }
+                if (tries > 10) break;
+            }
         }
 
         public void reloadContext()
@@ -101,7 +140,12 @@ namespace uKeepIt
 
         public void readConfig()
         {
-            IniFile config = IniFile.From(MiniBurrow.Static.FileBytes(_location));
+            if (!File.Exists(_location))
+            {
+                return;
+            }
+
+            IniFile config = IniFile.From(File.ReadAllBytes(_location));
 
             foreach (var sectionPair in config.SectionsByName)
             {
@@ -130,10 +174,15 @@ namespace uKeepIt
 
             var key_file = config.SectionsByName[_key_section].Get(_path_key, _default_key_location);
             key = Tuple.Create(key_file, MiniBurrow.Static.FileBytes(key_file, null));
+
+            reloadContext();
         }
 
         public void writeConfig()
         {
+            if (watcher != null)
+                watcher.EnableRaisingEvents = false;
+
             IniFile config = new IniFile();
             string tpl = "{0} {1}";
 
@@ -152,6 +201,9 @@ namespace uKeepIt
             sec.Set(_path_key, key.Item1);
 
             MiniBurrow.Static.WriteFile(_location, config.ToBytes());
+
+            if (watcher != null)
+                watcher.EnableRaisingEvents = true;
         }
 
         public bool invalidateKey(string pw)
@@ -160,7 +212,6 @@ namespace uKeepIt
 
             if (keycheck.SequenceEqual(key.Item2))
             {
-                key = Tuple.Create(key.Item1, (byte[])null);
                 return true;
             }
             return false;
@@ -177,6 +228,11 @@ namespace uKeepIt
             if (_context != null)
                 _context.reloadKey(key.Item2);
             AESKey.storeKey(key.Item2, key.Item1);
+        }
+
+        internal void registerOnChanged(ConfigurationWindow configWindow)
+        {
+            onChangedCallback = configWindow;
         }
     }
 }

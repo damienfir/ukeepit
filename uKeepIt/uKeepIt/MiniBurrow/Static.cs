@@ -63,7 +63,7 @@ namespace uKeepIt.MiniBurrow
 
         // *** File operations ***
 
-        public static byte[] FileBytes(string file, byte[] defaultBytes = null, int logLevel = LogLevel.None)
+        public static byte[] FileBytes(string file, byte[] defaultBytes = null, int logLevel = LogLevel.Debug)
         {
             try { return File.ReadAllBytes(file); }
             catch (Exception ex)
