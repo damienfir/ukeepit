@@ -32,7 +32,7 @@ namespace uKeepIt
             var args = e.Args;
 
             if (args.Length > 0)
-            {
+            {  // called from the right-click menu to add a folder
                 var folder = args[0];
                 config = new Configuration();
                 config.addSpace(folder);
@@ -40,18 +40,8 @@ namespace uKeepIt
                 Application.Current.Shutdown();
             }
             else
-            {
-                //if (!SetRegistry.register())
-                //{
-                    //MessageBox.Show("launching", "");
-                    launch();
-                //}
-                //else
-                //{
-                //    //MessageBox.Show("shutting down", "");
-                //    Environment.Exit(0);
-                //    Application.Current.Shutdown();
-                //}
+            {  // launching the full application
+                launch();
             }
         }
     }

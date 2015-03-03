@@ -48,7 +48,6 @@ namespace uKeepIt
 
         public void reloadObjectStore(Dictionary<string, Store> stores_dict)
         {
-
             stores.Clear();
 
             var objectStores = new List<ObjectStore>();

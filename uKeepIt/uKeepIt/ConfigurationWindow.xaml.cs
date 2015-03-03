@@ -238,7 +238,7 @@ namespace uKeepIt
             if (confirm_action("remove space permanently ?"))
             {
                 var to_remove = ((Button)sender).Tag as string;
-                execute(_config.removeSpace(to_remove, true));
+                execute(_config.deleteSpace(to_remove));
                 loadSpaces();
             }
         }
@@ -283,20 +283,29 @@ namespace uKeepIt
             System.Windows.Application.Current.Shutdown();
         }
 
+        private void SpaceView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
     }
 
     public class StoreItem
     {
+        public StoreItem() { }
         public string Name { get; set; }
         public string Path { get; set; }
     }
 
     public class SpaceItem
     {
+        public SpaceItem() { }
         public string Name { get; set; }
         public string Path { get; set; }
     }
 
+    public class StoreCollection : ObservableCollection<StoreItem> { public StoreCollection() { } }
+    public class SpaceCollection : ObservableCollection<SpaceItem> { public SpaceCollection() { } }
 
     public class SpaceTemplateSelector: DataTemplateSelector
     {

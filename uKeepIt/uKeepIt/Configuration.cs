@@ -129,11 +129,23 @@ namespace uKeepIt
             return addSpace(name, folder);
         }
 
-        public bool removeSpace(string name, bool delete_folder = false)
+        public bool removeSpace(string name)
         {
-            if (delete_folder)
+            return spaces.Remove(name);
+        }
+
+        public bool deleteSpace(string name)
+        {
+            foreach (var store in stores)
             {
-                MiniBurrow.Static.DirectoryDelete(spaces[name].folder);
+                try
+                {
+                    Directory.Delete(store.Value.SpaceRoot(name).Folder, true);
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
             }
             return spaces.Remove(name);
         }

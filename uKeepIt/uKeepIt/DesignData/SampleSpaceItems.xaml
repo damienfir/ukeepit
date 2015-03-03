@@ -1,0 +1,12 @@
+﻿<local:SpaceCollection xmlns:local="clr-namespace:uKeepIt">
+    <local:SpaceItem Name="Dropbox" Path="C:/Dropbox" />
+    <local:SpaceItem Name="Google Drive" Path="C:/GoogleDrive" />
+    <local:SpaceItem Name="Box" Path="" />
+    <local:SpaceItem Name="Google Drive" Path="C:/GoogleDrive" />
+    <local:SpaceItem Name="Google Drive" Path="C:/GoogleDrive" />
+    <local:SpaceItem Name="Google Drive" Path="C:/GoogleDrive" />
+    <local:SpaceItem Name="Google Drive" Path="C:/GoogleDrive" />
+    <local:SpaceItem Name="Google Drive" Path="C:/GoogleDrive" />
+    <local:SpaceItem Name="Google Drive" Path="C:/GoogleDrive" />
+    <local:SpaceItem Name="Google Drive" Path="C:/GoogleDrive" />
+</local:SpaceCollection>

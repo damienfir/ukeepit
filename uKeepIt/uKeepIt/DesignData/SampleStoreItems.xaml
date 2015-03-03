@@ -1,0 +1,5 @@
+﻿<local:StoreCollection xmlns:local="clr-namespace:uKeepIt">
+    <local:StoreItem Name="Dropbox" Path="C:/Dropbox" />
+    <local:StoreItem Name="Google Drive" Path="C:/GoogleDrive" />
+    <local:StoreItem Name="Box" Path="C:/Box" />
+</local:StoreCollection>
