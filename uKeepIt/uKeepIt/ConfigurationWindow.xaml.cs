@@ -218,9 +218,23 @@ namespace uKeepIt
 
         private void SpaceRemove_Click(object sender, RoutedEventArgs e)
         {
-            var to_remove = ((Button)sender).Tag as string;
-            _config.removeSpace(to_remove);
-            execute(_config.addSpace(to_remove, _config._default_folder));
+            var to_remove = SpaceView.SelectedItem as SpaceItem;
+            if (to_remove.Path.Equals(""))
+            {
+                if (confirm_action("remove space permanently ?"))
+                {
+                    execute(_config.deleteSpace(to_remove.Name));
+                    loadSpaces();
+                }
+            }
+            else
+            {
+                if (confirm_action("remove space locally ?"))
+                {
+                    _config.removeSpace(to_remove.Name);
+                    execute(_config.addSpace(to_remove.Name, _config._default_folder));
+                }
+            }
             loadSpaces();
         }
 
@@ -231,16 +245,6 @@ namespace uKeepIt
 
             checkout_space(to_checkout, target_location);
             loadSpaces();
-        }
-
-        private void SpaceDelete_Click(object sender, RoutedEventArgs e)
-        {
-            if (confirm_action("remove space permanently ?"))
-            {
-                var to_remove = ((Button)sender).Tag as string;
-                execute(_config.deleteSpace(to_remove));
-                loadSpaces();
-            }
         }
 
         private void done_button_click(object sender, RoutedEventArgs e)
@@ -282,12 +286,6 @@ namespace uKeepIt
         {
             System.Windows.Application.Current.Shutdown();
         }
-
-        private void SpaceView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
     }
 
     public class StoreItem
