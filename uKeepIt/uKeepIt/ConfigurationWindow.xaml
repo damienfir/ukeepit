@@ -99,7 +99,7 @@
                 <Control.Resources>
                     <ControlTemplate x:Key="uiPasswordSetTemplate">
                         <UniformGrid Columns="2">
-                            <TextBlock HorizontalAlignment="Stretch" Text="Password already set"/>
+                            <TextBlock HorizontalAlignment="Stretch" Text="Password set"/>
                             <Button Style="{DynamicResource AccentColorButton}" Click="ChangePassword_Click" Content="Change Password" Width="Auto" HorizontalAlignment="Right"/>
                         </UniformGrid>
                     </ControlTemplate>

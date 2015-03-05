@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Collections.ObjectModel;
 using System.Windows.Controls.Primitives;
+using System.Diagnostics;
 
 namespace uKeepIt
 {
@@ -209,7 +210,18 @@ namespace uKeepIt
 
         private void SpaceShow_Click(object sender, RoutedEventArgs e)
         {
-
+            var toShow = SpaceView.SelectedItem as SpaceItem;
+            if (toShow != null)
+            {
+                try
+                {
+                    Process.Start(toShow.Path);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
         }
 
         private void SpaceAdd_Click(object sender, RoutedEventArgs e)

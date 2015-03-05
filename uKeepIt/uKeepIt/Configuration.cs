@@ -114,6 +114,15 @@ namespace uKeepIt
             var store = stores[name];
             stores.Remove(name);
             _context.removeObjectStore(store, stores);
+            try
+            {
+                Directory.Delete(store.Folder, true);
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
             return true;
         }
 
