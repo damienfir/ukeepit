@@ -24,6 +24,7 @@ namespace uKeepIt
             config = new Configuration(context);
             configwindow = new ConfigurationWindow(config);
             notification = new NotificationMenu(configwindow);
+            context.enableGarbageCollection();
         }
 
         protected override void OnStartup(StartupEventArgs e)

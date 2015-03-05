@@ -25,6 +25,17 @@ namespace uKeepIt.MiniBurrow.Folder
             return File.Exists(file);
         }
 
+        public List<string> List()
+        {
+            var folders = Directory.EnumerateDirectories(Folder).Where((x) => !x.Equals("spaces")).ToList();
+            var hashes = new List<string>();
+            foreach (var f in folders)
+            {
+                hashes.AddRange(Directory.EnumerateFiles(f));
+            }
+            return hashes;
+        }
+
         public BurrowObject Get(Hash hash)
         {
             var hashHex = hash.Hex();

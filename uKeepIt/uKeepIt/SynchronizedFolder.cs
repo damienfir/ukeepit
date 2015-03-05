@@ -9,15 +9,16 @@ namespace uKeepIt
 {
     public class SynchronizedFolder
     {
-        public readonly Context context;
+        public readonly ContextSnapshot context;
         public readonly Space space;
 
         //public readonly SynchronizedFolderState CreatedState;
         private FileSystemWatcher _watcher;
         private bool _changed = false;
         private bool _syncing = false;
+        private bool _canSync = true;
 
-        public SynchronizedFolder(Context context, Space space)
+        public SynchronizedFolder(ContextSnapshot context, Space space)
         {
             this.context = context;
             this.space = space;
@@ -69,6 +70,21 @@ namespace uKeepIt
             }
         }
 
+        public void disableSync()
+        {
+            _canSync = false;
+        }
+
+        public void enableSync()
+        {
+            _canSync = true;
+        }
+
+        public bool isSyncing()
+        {
+            return _syncing;
+        }
+
         public void syncFolder()
         {
             syncFolder(context.key, context.key);
@@ -83,7 +99,7 @@ namespace uKeepIt
         private void launchSynchronizer(ArraySegment<byte> readkey, ArraySegment<byte> writekey)
         {
             // discards while running or if no changes left
-            if (!_changed || _syncing) return;
+            if (!_changed || _syncing || !_canSync) return;
 
             // stop if writekey set
             if (writekey.Array == null) return;
@@ -92,7 +108,7 @@ namespace uKeepIt
             _changed = false;
 
             Console.WriteLine("launching synchronizer for {0}", space.folder);
-            new Synchronizer(space.CreateEditor(readkey, writekey, context.multiobjectstore, context.stores), space.folder, context.multiobjectstore);
+            new Synchronizer(space.CreateEditor(readkey, writekey, context.multiObjectStore, context.stores), space.folder, context.multiObjectStore);
             Console.WriteLine("synchronizer finished for {0}", space.folder);
             _syncing = false;
 

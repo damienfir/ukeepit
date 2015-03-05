@@ -18,7 +18,7 @@ namespace uKeepIt
             this.folder = folder;
         }
 
-        public SpaceEditor CreateEditor(ArraySegment<byte> readkey, ArraySegment<byte> writekey, MultiObjectStore multiobjectstore, List<Store> stores)
+        public SpaceEditor CreateEditor(ArraySegment<byte> readkey, ArraySegment<byte> writekey, MultiObjectStore multiobjectstore, ImmutableStack<Store> stores)
         {
             var roots = new ImmutableStack<Root>();
             foreach (var store in stores)

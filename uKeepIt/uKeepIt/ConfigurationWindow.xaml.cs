@@ -34,10 +34,9 @@ namespace uKeepIt
             this._config = config;
             _config.registerOnChanged(this);
 
+            Closing += ConfigurationWindow_Closing;
+
             InitializeComponent();
-            //App.Configuration.Reloaded += BurrowConfiguration_Reloaded;
-            //BurrowConfiguration_Reloaded(null, null);
-            //reloadWindow();
 
             store_items = new ObservableCollection<StoreItem>();
             space_items = new ObservableCollection<SpaceItem>();
@@ -51,13 +50,20 @@ namespace uKeepIt
             initializePasswordView();
         }
 
+        void ConfigurationWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            e.Cancel = true;
+            Hide();
+            _config.reloadContext();
+        }
+
         public void notify()
         {
-            var del = new ConfigWatcher(notifyChange);
+            var del = new ConfigWatcher(notifyCallback);
             Application.Current.Dispatcher.BeginInvoke(del, null);
         }
 
-        public void notifyChange()
+        public void notifyCallback()
         {
             loadStores();
             loadSpaces();

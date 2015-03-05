@@ -30,12 +30,18 @@ namespace uKeepIt.MiniBurrow.Folder
             {
                 // Master
                 foreach (ObjectUrl objectUrl in store.MasterRoot.List())
-                    if (!traverse(objectUrl.Hash, set)) return false;
+                    if (!traverse(objectUrl.Hash, set))
+                    {
+                        return false;
+                    }
 
                 // Spaces
                 foreach (var spaceName in store.ListSpaces())
                     foreach (ObjectUrl objectUrl in store.SpaceRoot(spaceName).List())
-                        if (!traverse(objectUrl.Hash, set)) return false;
+                        if (!traverse(objectUrl.Hash, set))
+                        {
+                            return false;
+                        }
             }
 
             // Delete those remaining
@@ -85,7 +91,7 @@ namespace uKeepIt.MiniBurrow.Folder
                     }
 
                     // delete directory if empty
-                    if (!MiniBurrow.Static.DirectoryEnumerateFiles(folder).Any())
+                    if (!MiniBurrow.Static.DirectoryEnumerateFiles(folder).Any() && !MiniBurrow.Static.DirectoryEnumerateDirectories(folder).Any())
                         allOK &= MiniBurrow.Static.DirectoryDelete(folder);
                 }
             }

@@ -111,7 +111,10 @@ namespace uKeepIt
 
         public bool removeStore(string name)
         {
-            return stores.Remove(name);
+            var store = stores[name];
+            stores.Remove(name);
+            _context.removeObjectStore(store, stores);
+            return true;
         }
 
         public bool addSpace(string name, string location)
@@ -238,7 +241,10 @@ namespace uKeepIt
         {
             key = Tuple.Create(key.Item1, AESKey.generateKey(pw));
             if (_context != null)
+            {
                 _context.reloadKey(key.Item2);
+                _context.synchronizeWithNewKey();
+            }
             AESKey.storeKey(key.Item2, key.Item1);
         }
 

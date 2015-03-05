@@ -41,9 +41,11 @@ namespace uKeepIt
                 if (MergedHashesByHexId.ContainsKey(objectUrl.Hash.Hex())) continue;
 
                 var envelopeObject= multiObjectStore.Get(objectUrl.Hash);
+                if (envelopeObject == null)  continue;
                 var reference = MiniBurrow.Aes.Envelope.Open(envelopeObject, ReadKey);
 
                 var obj = multiObjectStore.Get(reference.Hash);
+                if (obj == null) continue;
                 MiniBurrow.Aes.Static.Process(obj.Data, reference.Key, reference.Nonce);
                 if (Merge(obj)) MergedHashesByHexId.Add(objectUrl.Hash.Hex(), objectUrl.Hash);
             }
