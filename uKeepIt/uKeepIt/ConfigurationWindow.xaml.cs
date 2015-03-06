@@ -49,6 +49,16 @@ namespace uKeepIt
             SpaceView.ItemsSource = space_items;
 
             initializePasswordView();
+
+            firstStart();
+        }
+
+        private void firstStart()
+        {
+            if (_config.key.Item2 == null)
+            {
+                Show();
+            }
         }
 
         void ConfigurationWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -144,7 +154,7 @@ namespace uKeepIt
                 return false;
             }
 
-            _config.changeKey(pw1);
+            execute(_config.changeKey(pw1));
             initializePasswordView();
             return true;
         }

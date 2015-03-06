@@ -26,7 +26,7 @@ namespace uKeepIt
             _icon = new NotifyIcon(new System.ComponentModel.Container())
             {
                 ContextMenuStrip = menu,
-                Icon = new Icon(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\ukeepit\\ukeepit-tray.ico"),
+                Icon = new Icon(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\di55erent\\uKeepIt\\ukeepit-tray.ico"),
                 Text = "ukeepit",
                 Visible = true
             };

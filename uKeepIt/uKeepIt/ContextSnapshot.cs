@@ -19,7 +19,14 @@ namespace uKeepIt
             this.stores = ImmutableStack.From(context.stores);
             this.objectStores = ImmutableStack.From(context.objectStores);
             this.multiObjectStore = MultiObjectStore.For(context.objectStores);
-            this.key = new ArraySegment<byte>(context.key.ToByteArray());
+            if (context.key.Array != null)
+            {
+                this.key = new ArraySegment<byte>(context.key.ToByteArray());
+            }
+            else
+            {
+                this.key = new ArraySegment<byte>();
+            }
         }
     }
 }

@@ -34,7 +34,7 @@ namespace uKeepIt
         public Configuration(Context context)
         {
             _context = context;
-            var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\ukeepit";
+            var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\di55erent\\uKeepIt";
             if (!Directory.Exists(appDataFolder))
             {
                 Directory.CreateDirectory(appDataFolder);
@@ -196,7 +196,11 @@ namespace uKeepIt
                 }
             }
 
-            var key_file = config.SectionsByName[_key_section].Get(_path_key, _default_key_location);
+            var key_file = _default_key_location;
+            if (config.SectionsByName.ContainsKey(_key_section))
+            {
+                key_file = config.SectionsByName[_key_section].Get(_path_key, _default_key_location);
+            }
             key = Tuple.Create(key_file, MiniBurrow.Static.FileBytes(key_file, null));
 
             reloadContext();
@@ -246,7 +250,7 @@ namespace uKeepIt
             return key.Item2;
         }
 
-        internal void changeKey(string pw)
+        internal bool changeKey(string pw)
         {
             key = Tuple.Create(key.Item1, AESKey.generateKey(pw));
             if (_context != null)
@@ -254,7 +258,7 @@ namespace uKeepIt
                 _context.reloadKey(key.Item2);
                 _context.synchronizeWithNewKey();
             }
-            AESKey.storeKey(key.Item2, key.Item1);
+            return AESKey.storeKey(key.Item2, key.Item1);
         }
 
         internal void registerOnChanged(ConfigurationWindow configWindow)
