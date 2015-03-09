@@ -11,7 +11,17 @@
         Title="ukeepit setup" Width="340" Height="400" ResizeMode="CanMinimize" EnableDWMDropShadow="True" ShowTitleBar="True">
     
     <TabControl x:Name="tabs">
-        <TabItem x:Name="passphraseTab" Header="Passphrase" Visibility="Visible">
+        <TabItem Header="Welcome" Visibility="Collapsed">
+            <DockPanel Margin="10">
+                <TextBlock DockPanel.Dock="Top" FontSize="24">
+                    <TextBlock.Foreground>
+                        <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.HotTrackColorKey}}"/>
+                    </TextBlock.Foreground><Run Text="Welcome to "/><Run FontWeight="Bold" Text="ukeepit "/><Run Text="setup"/></TextBlock>
+                <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,20,0,0" Foreground="#FF7C7C7C" ><Run Text="You will be asked to set up a"/><LineBreak/><Run Text="[1] master password and"/><LineBreak/><Run Text="[2] asked to indicate the cloud storage locations."/><LineBreak/><Run/><LineBreak/><Run Text="Do no worry, you can change any of these setting later by clicking on the ukeepit tray icon."/></TextBlock>
+                <Button DockPanel.Dock="Top" Style="{DynamicResource AccentColorButton}" Content="Continue" Width="Auto" Margin="0,10,0,0" FontSize="12" FontFamily="Segoe UI" FontWeight="Normal" VerticalAlignment="Bottom" Click="Welcome_Click"/>
+            </DockPanel>
+        </TabItem>
+        <TabItem x:Name="passphraseTab" Header="Passphrase" Visibility="Collapsed">
             <DockPanel Margin="10">
                 <TextBox DockPanel.Dock="Top" x:Name="password_input1" Controls:TextBoxHelper.Watermark="Choose your master passphrase" Margin="0,0,0,5" FontSize="14"/>
                 <TextBox DockPanel.Dock="Top" x:Name="password_input2" Controls:TextBoxHelper.Watermark="Enter again" Margin="0" FontSize="14"/>
@@ -20,7 +30,7 @@
                 <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,10,0,0" Foreground="#FF7E7E7E" VerticalAlignment="Bottom"><Run Text="This passphrase is used by ukeepit to encrypt all your files."/><LineBreak/><Run/><LineBreak/><Run Foreground="#FF0066CC" Text="Please note and keep this passphrase safe"/><Run Text=", we do not store it. Long passphrases are safer. This passphrase is also needed when you would want to replace it with a different one."/></TextBlock>
             </DockPanel>
         </TabItem>
-        <TabItem x:Name="cloudTab" Header="Clouds" Visibility="Visible">
+        <TabItem x:Name="cloudTab" Header="Clouds" Visibility="Collapsed">
             <DockPanel Margin="10">
                 <UniformGrid DockPanel.Dock="Top" Columns="2">
                     <Label Content="Choose your clouds" Margin="0" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Padding="0"/>
@@ -47,7 +57,7 @@
                 <Button DockPanel.Dock="Top" Style="{DynamicResource AccentColorButton}" Content="Continue" Width="Auto" Margin="0,10,0,0" FontSize="12" FontFamily="Segoe UI" FontWeight="Normal" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="CloudsContinue_Click" VerticalAlignment="Bottom"/>
             </DockPanel>
         </TabItem>
-        <TabItem x:Name="finishTab" Header="Finish">
+        <TabItem x:Name="finishTab" Header="Finish" Visibility="Collapsed">
             <DockPanel Margin="10">
                 <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap">
                     That's it. Congratulations for having installed and setup ukeepit!

@@ -83,5 +83,10 @@ namespace uKeepIt
             _config.reloadContext();
             Close();
         }
+
+        private void Welcome_Click(object sender, RoutedEventArgs e)
+        {
+            tabs.SelectedItem = passphraseTab;
+        }
     }
 }
