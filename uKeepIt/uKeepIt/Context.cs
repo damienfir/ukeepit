@@ -91,7 +91,14 @@ namespace uKeepIt
 
         public void synchronizeWithNewKey()
         {
-            synchronize(previous_key, key);
+            if (previous_key.Array != null)
+            {
+                synchronize(previous_key, key);
+            }
+            else
+            {
+                synchronize();
+            }
         }
 
         public void synchronize()

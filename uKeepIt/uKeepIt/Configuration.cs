@@ -272,6 +272,18 @@ namespace uKeepIt
         {
             onChangedCallback = configWindow;
         }
+
+        internal bool firstStart()
+        {
+            if (getKey() == null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 
     public class ConfigurationEditor

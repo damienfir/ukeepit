@@ -20,12 +20,15 @@ namespace uKeepIt
 
         private void launch()
         {
-            //context = new Context();
-            //config = new Configuration(context);
-            new WelcomeWindow(config);
-            //configwindow = new ConfigurationWindow(config);
-            //notification = new NotificationMenu(configwindow);
-            //context.enableGarbageCollection();
+            context = new Context();
+            config = new Configuration(context);
+            if (config.firstStart())
+            {
+                new WelcomeWindow(config);
+            }
+            configwindow = new ConfigurationWindow(config);
+            notification = new NotificationMenu(configwindow);
+            context.enableGarbageCollection();
         }
 
         protected override void OnStartup(StartupEventArgs e)

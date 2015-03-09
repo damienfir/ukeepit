@@ -89,6 +89,7 @@
       <DependentUpon>CheckInFolder.xaml</DependentUpon>
     </Compile>
     <Compile Include="AESKey.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="CollectionItems.cs" />
     <Compile Include="ContextSnapshot.cs" />
     <Compile Include="ConfigurationWindow.xaml.cs">

@@ -24,12 +24,12 @@ namespace uKeepIt
         public WelcomeWindow(Configuration config)
         {
             _config = config;
+            InitializeComponent();
 
             store_items = new StoreCollection();
             loadStores();
             StoreView.ItemsSource = store_items;
 
-            InitializeComponent();
             Show();
         }
 
@@ -56,21 +56,32 @@ namespace uKeepIt
         {
             var to_remove = ((Button)sender).Tag as string;
             _config.editor.remove_store(to_remove as String);
+            loadStores();
         }
 
         private void SetPassword_Click(object sender, RoutedEventArgs e)
         {
+            var pw1 = password_input1.Text;
+            var pw2 = password_input2.Text;
 
+            if (!Utils.checkPassword(pw1, pw2)) return;
+
+            _config.editor.change_key(pw1);
+            _config.writeConfig();
+            tabs.SelectedItem = cloudTab;
         }
 
         private void CloudsContinue_Click(object sender, RoutedEventArgs e)
         {
-
+            _config.writeConfig();
+            tabs.SelectedItem = finishTab;
         }
 
         private void Finish_Click(object sender, RoutedEventArgs e)
         {
-
+            _config.writeConfig();
+            _config.reloadContext();
+            Close();
         }
     }
 }

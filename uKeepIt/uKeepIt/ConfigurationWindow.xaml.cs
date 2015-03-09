@@ -36,29 +36,29 @@ namespace uKeepIt
             _config.registerOnChanged(this);
 
             Closing += ConfigurationWindow_Closing;
+            Activated += ConfigurationWindow_Activated;
 
             InitializeComponent();
 
             store_items = new StoreCollection();
             space_items = new SpaceCollection();
-
-            loadStores();
-            loadSpaces();
-
             StoreView.ItemsSource = store_items;
             SpaceView.ItemsSource = space_items;
 
-            initializePasswordView();
-
-            firstStart();
+            reloadUI();
         }
 
-        private void firstStart()
+        private void ConfigurationWindow_Activated(object sender, EventArgs e)
         {
-            if (_config.key.Item2 == null)
-            {
-                Show();
-            }
+            reloadUI();
+        }
+
+        public void reloadUI()
+        {
+            //_config.readConfig();
+            loadStores();
+            loadSpaces();
+            initializePasswordView();
         }
 
         void ConfigurationWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -67,7 +67,6 @@ namespace uKeepIt
             Hide();
             _config.reloadContext();
         }
-
         public void notify()
         {
             var del = new ConfigWatcher(notifyCallback);
@@ -98,13 +97,6 @@ namespace uKeepIt
             }
         }
 
-        bool confirm_action(string message)
-        {
-            var button = MessageBoxButton.OKCancel;
-            var result = MessageBox.Show(message, "", button);
-            return result == MessageBoxResult.OK;
-        }
-
         private void SetPassword_Click(object sender, RoutedEventArgs e)
         {
             var pw1 = (uiPasswordWrapper.Template.FindName("password_input1", uiPasswordWrapper) as TextBox).Text;
@@ -126,21 +118,13 @@ namespace uKeepIt
 
         private bool setPassword(string pw1, string pw2)
         {
-            if (pw1.Equals(""))
+            if (Utils.checkPassword(pw1, pw2))
             {
-                var res = MessageBox.Show("password empty", "", MessageBoxButton.OK);
-                return false;
+                _config.editor.change_key(pw1);
+                initializePasswordView();
+                return true;
             }
-
-            if (pw1 != pw2)
-            {
-                var res = MessageBox.Show("passwords don't match", "", MessageBoxButton.OK);
-                return false;
-            }
-
-            _config.editor.change_key(pw1);
-            initializePasswordView();
-            return true;
+            return false;
         }
 
         private void VerifyPassword_Click(object sender, RoutedEventArgs e)
@@ -188,7 +172,7 @@ namespace uKeepIt
 
         void StoreDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (confirm_action("remove store"))
+            if (Utils.confirm_action("remove store"))
             {
                 var to_remove = ((Button)sender).Tag as string;
                 _config.editor.remove_store_with_files(to_remove as String);
@@ -227,7 +211,7 @@ namespace uKeepIt
             var to_remove = SpaceView.SelectedItem as SpaceItem;
             if (to_remove.Path.Equals(""))
             {
-                if (confirm_action("remove space permanently ?"))
+                if (Utils.confirm_action("remove space permanently ?"))
                 {
                     _config.editor.remove_space(to_remove.Name);
                     loadSpaces();
@@ -235,7 +219,7 @@ namespace uKeepIt
             }
             else
             {
-                if (confirm_action("remove space locally ?"))
+                if (Utils.confirm_action("remove space locally ?"))
                 {
                     _config.removeSpace(to_remove.Name);
                     _config.editor.execute(_config.addSpace(to_remove.Name, _config._default_folder));
