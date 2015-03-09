@@ -17,6 +17,7 @@ namespace uKeepIt
         private FileSystemWatcher watcher;
         private ConfigurationWindow onChangedCallback;
 
+        public ConfigurationEditor editor;
         private Context _context;
         public Tuple<string, byte[]> key;
         public Dictionary<string, Store> stores;
@@ -34,6 +35,7 @@ namespace uKeepIt
         public Configuration(Context context)
         {
             _context = context;
+            editor = new ConfigurationEditor(this);
             var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\di55erent\\uKeepIt";
             if (!Directory.Exists(appDataFolder))
             {
@@ -111,8 +113,13 @@ namespace uKeepIt
 
         public bool removeStore(string name)
         {
+            return stores.Remove(name);
+        }
+
+        public bool removeStoreWithFiles(string name)
+        {
             var store = stores[name];
-            stores.Remove(name);
+            removeStore(name);
             _context.removeObjectStore(store, stores);
             try
             {
@@ -264,6 +271,63 @@ namespace uKeepIt
         internal void registerOnChanged(ConfigurationWindow configWindow)
         {
             onChangedCallback = configWindow;
+        }
+    }
+
+    public class ConfigurationEditor
+    {
+        private Configuration _config;
+
+        public ConfigurationEditor(Configuration config)
+        {
+            _config = config;
+        }
+
+        public void execute(bool success)
+        {
+            if (success)
+            {
+                _config.writeConfig();
+            }
+        }
+
+        public void add_store(string folder)
+        {
+            string name = folder.Replace(System.IO.Path.GetDirectoryName(folder) + "\\", "");
+            folder += @"\ukeepit";
+
+            execute(_config.addStore(name, folder));
+        }
+
+        public void remove_store(string name)
+        {
+            execute(_config.removeStore(name));
+        }
+
+        public void remove_store_with_files(string name)
+        {
+            execute(_config.removeStoreWithFiles(name));
+        }
+
+        public void add_space(string folder)
+        {
+            execute(_config.addSpace(folder));
+        }
+
+        public void remove_space(string name)
+        {
+            execute(_config.removeSpace(name));
+        }
+
+        public void checkout_space(string name, string target_location)
+        {
+            _config.removeSpace(name);
+            execute(_config.addSpace(name, target_location));
+        }
+
+        public void change_key(string pw1)
+        {
+            execute(_config.changeKey(pw1));
         }
     }
 }

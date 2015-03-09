@@ -13,7 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 using System.IO;
-using System.Collections.ObjectModel;
+
 using System.Windows.Controls.Primitives;
 using System.Diagnostics;
 
@@ -27,8 +27,8 @@ namespace uKeepIt
         private Configuration _config;
         public delegate void ConfigWatcher();
 
-        private ObservableCollection<StoreItem> store_items;
-        private ObservableCollection<SpaceItem> space_items;
+        private StoreCollection store_items;
+        private SpaceCollection space_items;
 
         public ConfigurationWindow(Configuration config)
         {
@@ -39,8 +39,8 @@ namespace uKeepIt
 
             InitializeComponent();
 
-            store_items = new ObservableCollection<StoreItem>();
-            space_items = new ObservableCollection<SpaceItem>();
+            store_items = new StoreCollection();
+            space_items = new SpaceCollection();
 
             loadStores();
             loadSpaces();
@@ -105,22 +105,6 @@ namespace uKeepIt
             return result == MessageBoxResult.OK;
         }
 
-        void execute(bool success)
-        {
-            if (success)
-            {
-                _config.writeConfig();
-            }
-        }
-
-        private string choose_folder()
-        {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-            if (result != System.Windows.Forms.DialogResult.OK) return "";
-            return dialog.SelectedPath;
-        }
-
         private void SetPassword_Click(object sender, RoutedEventArgs e)
         {
             var pw1 = (uiPasswordWrapper.Template.FindName("password_input1", uiPasswordWrapper) as TextBox).Text;
@@ -154,7 +138,7 @@ namespace uKeepIt
                 return false;
             }
 
-            execute(_config.changeKey(pw1));
+            _config.editor.change_key(pw1);
             initializePasswordView();
             return true;
         }
@@ -194,18 +178,12 @@ namespace uKeepIt
 
         private void StoreAdd_Click(object sender, RoutedEventArgs e)
         {
-            string requestedPath = choose_folder();
-            if (checkPath(requestedPath))
+            string requestedPath = Utils.choose_folder();
+            if (Utils.checkPath(requestedPath))
             {
-                add_store(requestedPath);
+                _config.editor.add_store(requestedPath);
                 loadStores();
             }
-        }
-
-        private bool checkPath(string requestedPath)
-        {
-            return !requestedPath.Equals("");
-            // check writable, etc ...
         }
 
         void StoreDelete_Click(object sender, RoutedEventArgs e)
@@ -213,7 +191,7 @@ namespace uKeepIt
             if (confirm_action("remove store"))
             {
                 var to_remove = ((Button)sender).Tag as string;
-                remove_store(to_remove as String);
+                _config.editor.remove_store_with_files(to_remove as String);
                 loadStores();
             }
         }
@@ -236,10 +214,10 @@ namespace uKeepIt
 
         private void SpaceAdd_Click(object sender, RoutedEventArgs e)
         {
-            var target = choose_folder();
+            var target = Utils.choose_folder();
             if (target != "")
             {
-                add_space(target);
+                _config.editor.add_space(target);
                 loadSpaces();
             }
         }
@@ -251,7 +229,7 @@ namespace uKeepIt
             {
                 if (confirm_action("remove space permanently ?"))
                 {
-                    execute(_config.deleteSpace(to_remove.Name));
+                    _config.editor.remove_space(to_remove.Name);
                     loadSpaces();
                 }
             }
@@ -260,7 +238,7 @@ namespace uKeepIt
                 if (confirm_action("remove space locally ?"))
                 {
                     _config.removeSpace(to_remove.Name);
-                    execute(_config.addSpace(to_remove.Name, _config._default_folder));
+                    _config.editor.execute(_config.addSpace(to_remove.Name, _config._default_folder));
                 }
             }
             loadSpaces();
@@ -269,9 +247,9 @@ namespace uKeepIt
         private void SpaceCheckout_Click(object sender, RoutedEventArgs e)
         {
             var to_checkout = (sender as Button).Tag as string;
-            var target_location = choose_folder();
+            var target_location = Utils.choose_folder();
 
-            checkout_space(to_checkout, target_location);
+            _config.editor.checkout_space(to_checkout, target_location);
             loadSpaces();
         }
 
@@ -281,57 +259,11 @@ namespace uKeepIt
             _config.reloadContext();
         }
 
-        private void add_store(string folder)
-        {
-            string name = folder.Replace(System.IO.Path.GetDirectoryName(folder) + "\\", "");
-            folder += @"\ukeepit";
-
-            execute(_config.addStore(name, folder));
-        }
-
-        private void remove_store(string name)
-        {
-            execute(_config.removeStore(name));
-        }
-
-        private void add_space(string folder)
-        {
-            execute(_config.addSpace(folder));
-        }
-
-        private void remove_space(string name)
-        {
-            execute(_config.removeSpace(name));
-        }
-
-        private void checkout_space(string name, string target_location)
-        {
-            _config.removeSpace(name);
-            execute(_config.addSpace(name, target_location));
-        }
-
         private void quit_btn_click(object sender, RoutedEventArgs e)
         {
             System.Windows.Application.Current.Shutdown();
         }
     }
-
-    public class StoreItem
-    {
-        public StoreItem() { }
-        public string Name { get; set; }
-        public string Path { get; set; }
-    }
-
-    public class SpaceItem
-    {
-        public SpaceItem() { }
-        public string Name { get; set; }
-        public string Path { get; set; }
-    }
-
-    public class StoreCollection : ObservableCollection<StoreItem> { public StoreCollection() { } }
-    public class SpaceCollection : ObservableCollection<SpaceItem> { public SpaceCollection() { } }
 
     public class SpaceTemplateSelector: DataTemplateSelector
     {
