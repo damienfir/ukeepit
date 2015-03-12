@@ -45,5 +45,10 @@ namespace uKeepIt
 
             return true;
         }
+
+        public static void alert(string msg)
+        {
+            MessageBox.Show(msg, "", MessageBoxButton.OK);
+        }
     }
 }

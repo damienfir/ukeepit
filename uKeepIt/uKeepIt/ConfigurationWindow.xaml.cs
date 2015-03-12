@@ -136,7 +136,7 @@ namespace uKeepIt
             }
             else
             {
-                MessageBox.Show("password is not correct", "", MessageBoxButton.OK);
+                Utils.alert("Sorry, the password is not correct");
             }
         }
 
@@ -209,6 +209,8 @@ namespace uKeepIt
         private void SpaceRemove_Click(object sender, RoutedEventArgs e)
         {
             var to_remove = SpaceView.SelectedItem as SpaceItem;
+            if (to_remove == null) return;
+
             if (to_remove.Path.Equals(""))
             {
                 if (Utils.confirm_action("remove space permanently ?"))
@@ -221,8 +223,9 @@ namespace uKeepIt
             {
                 if (Utils.confirm_action("remove space locally ?"))
                 {
-                    _config.removeSpace(to_remove.Name);
-                    _config.editor.execute(_config.addSpace(to_remove.Name, _config._default_folder));
+                    _config.editor.checkout_space(to_remove.Name, _config._default_folder);
+                    //_config.removeSpace(to_remove.Name);
+                    //_config.editor.execute(_config.addSpace(to_remove.Name, _config._default_folder));
                 }
             }
             loadSpaces();
@@ -236,7 +239,7 @@ namespace uKeepIt
             _config.editor.checkout_space(to_checkout, target_location);
             loadSpaces();
         }
-
+        
         private void done_button_click(object sender, RoutedEventArgs e)
         {
             Hide();

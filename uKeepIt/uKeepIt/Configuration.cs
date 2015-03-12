@@ -29,6 +29,8 @@ namespace uKeepIt
         private readonly string _path_key = "path";
         public readonly string _default_folder = "";
 
+        private List<FileSystemWatcher> watchedFolders;
+
 
         public Configuration() : this(null) { }
 
@@ -41,6 +43,8 @@ namespace uKeepIt
             {
                 Directory.CreateDirectory(appDataFolder);
             }
+
+            watchedFolders = new List<FileSystemWatcher>();
 
             _location = appDataFolder + "\\conf.ini";
             _default_key_location = appDataFolder + "\\key.data";
@@ -98,17 +102,31 @@ namespace uKeepIt
 
         public bool addStore(string name, string location)
         {
-            if (stores.ContainsKey(name))
+            if (!location.Equals(_default_folder) && !Directory.Exists(location))
+            {
+                Utils.alert("The cloud " + name + " previously located at " + location + " cannot be found any more, please select the new location");
+                return false;
+            }
+
+            if (stores.ContainsKey(name) && stores[name].Folder.Equals(location))
                 return false;
 
+            stores.Add(name, new Store(location));
+            return true;
+        }
+
+        public bool addStore(string location)
+        {
+            string name = location.Replace(System.IO.Path.GetDirectoryName(location) + "\\", "");
+            location += @"\ukeepit";
+            
             var spaces_location = location + @"\spaces";
             if (!Directory.Exists(spaces_location))
             {
                 if (!MiniBurrow.Static.DirectoryCreate(spaces_location))
                     return false;
             }
-            stores.Add(name, new Store(location));
-            return true;
+            return addStore(name, location);
         }
 
         public bool removeStore(string name)
@@ -129,14 +147,30 @@ namespace uKeepIt
             {
                 Console.WriteLine(ex.Message);
             }
-
             return true;
         }
 
         public bool addSpace(string name, string location)
         {
-            if (spaces.ContainsKey(name))
+            if (!location.Equals(_default_folder) && !Directory.Exists(location))
+            {
+                Utils.alert("The secured folder " + name + " previously located at " + location + " cannot be found any more, please select the new location");
                 return false;
+            }
+
+            // broad check
+            if (location != _default_folder && spaces.Values.Where(x => x.folder.Equals(location)).Count() > 0) return false;
+
+            // change name if already exists
+            if (spaces.ContainsKey(name))
+            {
+                var oldname = name;
+                int i = 1;
+                do {
+                    name = oldname + " (" + i + ")";
+                    i++;
+                } while (spaces.ContainsKey(name));
+            }
 
             spaces.Add(name, new Space(name, location));
             return true;
@@ -305,10 +339,7 @@ namespace uKeepIt
 
         public void add_store(string folder)
         {
-            string name = folder.Replace(System.IO.Path.GetDirectoryName(folder) + "\\", "");
-            folder += @"\ukeepit";
-
-            execute(_config.addStore(name, folder));
+            execute(_config.addStore(folder));
         }
 
         public void remove_store(string name)

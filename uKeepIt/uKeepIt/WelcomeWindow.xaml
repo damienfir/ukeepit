@@ -9,15 +9,15 @@
         xmlns:self="clr-namespace:uKeepIt"
         xmlns:local="clr-namespace:uKeepIt"
         Title="ukeepit setup" Width="340" Height="400" ResizeMode="CanMinimize" EnableDWMDropShadow="True" ShowTitleBar="True">
-    
+
     <TabControl x:Name="tabs">
         <TabItem Header="Welcome" Visibility="Collapsed">
             <DockPanel Margin="10">
                 <TextBlock DockPanel.Dock="Top" FontSize="24">
                     <TextBlock.Foreground>
                         <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.HotTrackColorKey}}"/>
-                    </TextBlock.Foreground><Run Text="Welcome to "/><Run FontWeight="Bold" Text="ukeepit "/><Run Text="setup"/></TextBlock>
-                <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,20,0,0" Foreground="#FF7C7C7C" ><Run Text="You will be asked to set up a"/><LineBreak/><Run Text="[1] master password and"/><LineBreak/><Run Text="[2] asked to indicate the cloud storage locations."/><LineBreak/><Run/><LineBreak/><Run Text="Do no worry, you can change any of these setting later by clicking on the ukeepit tray icon."/></TextBlock>
+                    </TextBlock.Foreground><Run Text="Welcome to "/><Run FontWeight="Bold" Text="ukeepit "/></TextBlock>
+                <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,20,0,0" Foreground="#FF7C7C7C" ><Run Text="You will be asked to set up a"/><LineBreak/><Run Text="- master password and"/><LineBreak/><Run Text="- asked to indicate the cloud storage locations."/><LineBreak/><Run/><LineBreak/><Run Text="Do not worry, you can change any of these setting later by clicking on the "/><Run Text="ukeepit" FontWeight="Bold"/><Run Text=" tray icon."/></TextBlock>
                 <Button DockPanel.Dock="Top" Style="{DynamicResource AccentColorButton}" Content="Continue" Width="Auto" Margin="0,10,0,0" FontSize="12" FontFamily="Segoe UI" FontWeight="Normal" VerticalAlignment="Bottom" Click="Welcome_Click"/>
             </DockPanel>
         </TabItem>
@@ -57,14 +57,14 @@
                 <Button DockPanel.Dock="Top" Style="{DynamicResource AccentColorButton}" Content="Continue" Width="Auto" Margin="0,10,0,0" FontSize="12" FontFamily="Segoe UI" FontWeight="Normal" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="CloudsContinue_Click" VerticalAlignment="Bottom"/>
             </DockPanel>
         </TabItem>
-        <TabItem x:Name="finishTab" Header="Finish" Visibility="Collapsed">
+        <TabItem x:Name="finishTab" Header="Finish" Visibility="Collapsed" Foreground="#FF878787">
             <DockPanel Margin="10">
                 <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap">
-                    That's it. Congratulations for having installed and setup ukeepit!
+                    That's it. Congratulations for having installed and setup <Run Text="ukeepit" FontWeight="Bold"/> !
                 </TextBlock>
                 <Image DockPanel.Dock="Top" Height="100"/>
-                <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0"><Run Text="From now on, any time you want to secure a folder, just right click on it and choose &quot;Secure with ukeepit&quot;. ukeepit with split and encrypt the contents of the folder and spread them over the clouds you have chosen."/><LineBreak/><Run/><LineBreak/><Run Text="ukeepit will also synchronise the encrypted files on the clouds whenever you make changes to the original ones."/></TextBlock>
-                <Button DockPanel.Dock="Top" Style="{DynamicResource AccentColorButton}" Content="Finish" Width="Auto" Margin="0,10,0,0" FontSize="12" FontFamily="Segoe UI" FontWeight="Normal" Click="Finish_Click" VerticalAlignment="Bottom"/>
+                <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0"><Run Text="From now on, any time you want to secure a folder, just right click on it and choose &quot;"/><Run Foreground="#FF0066CC" Text="Secure with ukeepit"/><Run Text="&quot;. "/><Run Text="ukeepit" FontWeight="Bold"/><Run Text=" will split and encrypt the content of the folder and spread them over the clouds you have chosen."/><LineBreak/><LineBreak/><Run Text="ukeepit" FontWeight="Bold"/><Run Text=" will also synchronise the encrypted files to the clouds whenever you make changes to the original ones."/></TextBlock>
+                <Button DockPanel.Dock="Top" Style="{DynamicResource AccentColorButton}" Content="Done" Width="Auto" Margin="0,10,0,0" FontSize="12" FontFamily="Segoe UI" FontWeight="Normal" Click="Finish_Click" VerticalAlignment="Bottom"/>
             </DockPanel>
         </TabItem>
     </TabControl>

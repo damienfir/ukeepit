@@ -9,6 +9,7 @@ namespace uKeepIt
 {
     public class Space
     {
+        //public readonly string title;
         public readonly string name;
         public readonly string folder;
 
@@ -27,5 +28,17 @@ namespace uKeepIt
             return new SpaceEditor(multiobjectstore, roots, readkey, writekey);
         }
 
+        public static string encode(string name, string folder)
+        {
+            var cat = name + "@" + folder;
+            return System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(cat));
+        }
+
+        public static Tuple<string,string> decode(string hash)
+        {
+            var cat = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(hash));
+            var split = cat.Split('@');
+            return new Tuple<string,string>(split[0], String.Join("@", split.Skip(1)));
+        }
     }
 }

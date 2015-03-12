@@ -31,6 +31,7 @@ namespace uKeepIt
         private void SetupWatcher()
         {
             _watcher = new FileSystemWatcher(space.folder);
+            _watcher.IncludeSubdirectories = true;
             _watcher.Changed += new FileSystemEventHandler(onChanged);
             _watcher.Created += new FileSystemEventHandler(onCreated);
             _watcher.Deleted += new FileSystemEventHandler(onDeleted);

@@ -40,8 +40,7 @@ namespace uKeepIt
             {  // called from the right-click menu to add a folder
                 var folder = args[0];
                 config = new Configuration();
-                config.addSpace(folder);
-                config.writeConfig();
+                config.editor.add_space(folder);
                 Application.Current.Shutdown();
             }
             else
