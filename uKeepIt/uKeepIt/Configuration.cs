@@ -38,7 +38,7 @@ namespace uKeepIt
         {
             _context = context;
             editor = new ConfigurationEditor(this);
-            var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\di55erent\\uKeepIt";
+            var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\di55erent\\ukeepit";
             if (!Directory.Exists(appDataFolder))
             {
                 Directory.CreateDirectory(appDataFolder);
@@ -360,6 +360,11 @@ namespace uKeepIt
         public void remove_space(string name)
         {
             execute(_config.removeSpace(name));
+        }
+
+        public void delete_space(string name)
+        {
+            execute(_config.deleteSpace(name));
         }
 
         public void checkout_space(string name, string target_location)

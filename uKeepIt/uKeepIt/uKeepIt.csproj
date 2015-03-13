@@ -51,7 +51,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>ukeepit.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\ukeepit.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
@@ -228,6 +228,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="ukeepit.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\screen_click.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ukeepit.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

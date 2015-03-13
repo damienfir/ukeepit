@@ -20,6 +20,14 @@ namespace uKeepIt
 
         private void launch()
         {
+            //bool ok;
+            //var m = new System.Threading.Mutex(true, "ukeepit", out ok);
+            //if (!ok)
+            //{
+            //    Application.Current.Shutdown();
+            //}
+            //GC.KeepAlive(m);
+
             context = new Context();
             config = new Configuration(context);
             if (config.firstStart())

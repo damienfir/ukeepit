@@ -215,7 +215,7 @@ namespace uKeepIt
             {
                 if (Utils.confirm_action("remove space permanently ?"))
                 {
-                    _config.editor.remove_space(to_remove.Name);
+                    _config.editor.delete_space(to_remove.Name);
                     loadSpaces();
                 }
             }

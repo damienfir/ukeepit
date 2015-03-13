@@ -1,4 +1,4 @@
-﻿uKeepIt
+﻿ukeepit
 
 
 winexe
@@ -10,11 +10,11 @@ none
 false
 TRACE
 C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\App.xaml
-31178713564
+61664323851
 
-48401712713
+52458087972
 16-1998283590
-CheckInFolder.xaml;ConfigurationWindow.xaml;Resources\Icons.xaml;
+CheckInFolder.xaml;ConfigurationWindow.xaml;DesignData\SampleSpaceItems.xaml;DesignData\SampleStoreItems.xaml;Resources\Icons.xaml;WelcomeWindow.xaml;
 
 False
 

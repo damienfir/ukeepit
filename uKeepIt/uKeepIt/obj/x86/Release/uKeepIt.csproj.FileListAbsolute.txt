@@ -19,3 +19,8 @@ C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\obj\x86\Release\uKeepIt.Pr
 C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\obj\x86\Release\uKeepIt.csproj.GenerateResource.Cache
 C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\obj\x86\Release\uKeepIt.exe
 C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\obj\x86\Release\uKeepIt.pdb
+C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\obj\x86\Release\uKeepIt.csprojResolveAssemblyReference.cache
+C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\obj\x86\Release\WelcomeWindow.g.cs
+C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\obj\x86\Release\DesignData\SampleSpaceItems.baml
+C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\obj\x86\Release\DesignData\SampleStoreItems.baml
+C:\Users\damien\Documents\ukeepit\git\uKeepIt\uKeepIt\obj\x86\Release\WelcomeWindow.baml

@@ -62,7 +62,7 @@
                 <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap">
                     That's it. Congratulations for having installed and setup <Run Text="ukeepit" FontWeight="Bold"/> !
                 </TextBlock>
-                <Image DockPanel.Dock="Top" Height="100"/>
+                <Image DockPanel.Dock="Top" Height="160" Source="Resources/screen_click.png"/>
                 <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0"><Run Text="From now on, any time you want to secure a folder, just right click on it and choose &quot;"/><Run Foreground="#FF0066CC" Text="Secure with ukeepit"/><Run Text="&quot;. "/><Run Text="ukeepit" FontWeight="Bold"/><Run Text=" will split and encrypt the content of the folder and spread them over the clouds you have chosen."/><LineBreak/><LineBreak/><Run Text="ukeepit" FontWeight="Bold"/><Run Text=" will also synchronise the encrypted files to the clouds whenever you make changes to the original ones."/></TextBlock>
                 <Button DockPanel.Dock="Top" Style="{DynamicResource AccentColorButton}" Content="Done" Width="Auto" Margin="0,10,0,0" FontSize="12" FontFamily="Segoe UI" FontWeight="Normal" Click="Finish_Click" VerticalAlignment="Bottom"/>
             </DockPanel>
